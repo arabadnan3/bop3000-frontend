@@ -3,7 +3,7 @@ import React from 'react'
 import { FaExclamationTriangle } from 'react-icons/fa';
 
 function statusColor(status, co2Value) {
-  if (status === "Feil med sensor") {
+  if (status === "Feil med sensorr") {
     return <FaExclamationTriangle className="text-yellow-500 text-xl" />;
   }
   if (co2Value !== null) {
