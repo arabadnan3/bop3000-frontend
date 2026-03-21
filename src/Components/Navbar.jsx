@@ -1,12 +1,21 @@
 import React from 'react'
+import { FaTachometerAlt, FaMicrochip, FaBell, FaExclamationTriangle } from 'react-icons/fa';
 
 function Navbar() {
   return (
-    <div>
-        <button className=" text-lg font-bold text-black-700 mb-6 p-2 bg-gray-300 border rounded cursor-pointer hover:underline">Dashboard </button>
-        <button className="text-lg font-bold text-black-700 ms-2 border rounded mb-6 p-2 bg-gray-300 cursor-pointer hover:underline"> Sensor  </button>
-        <button className="text-lg font-bold text-black-700 ms-2 border rounded mb-6 p-2 bg-gray-300 cursor-pointer hover:underline"> Notifikasjoner </button> 
-        <p className="text-lg text-black-700 font-bold mb-4 p-2 cursor-pointer hover:underline ">  VARSLINGER </p>
+    <div className="flex flex-wrap gap-4 px-8 py-4 bg-white shadow-md rounded-lg mx-8 mb-6">
+        <button className="flex items-center gap-2 text-lg font-semibold text-gray-700 px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200 transition duration-200">
+          <FaTachometerAlt /> Dashboard
+        </button>
+        <button className="flex items-center gap-2 text-lg font-semibold text-gray-700 px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200 transition duration-200">
+          <FaMicrochip /> Sensor
+        </button>
+        <button className="flex items-center gap-2 text-lg font-semibold text-gray-700 px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200 transition duration-200">
+          <FaBell /> Notifikasjoner
+        </button> 
+        <div className="flex items-center gap-2 text-lg font-semibold text-red-600 px-4 py-2">
+          <FaExclamationTriangle /> VARSLINGER
+        </div>
       
     </div>
   )

@@ -13,31 +13,34 @@ const chartData = [
 
 function CardDetail({data}) {
   return (
-    <div className="bg-gray-300 border p-3 rounded-lg py-5 px-5">
-      <p><span className="font-bold">Adresse:</span> {data.building}</p>
-      <p><span className="font-bold">Rom:</span> {data.room}</p>
-      <p><span className="font-bold">Etasje:</span> {data.floor}</p>
-      <p><span className="font-bold">Leietaker:</span> {data.leietaker}</p>
-      <p><span className="font-bold">Rom areal:</span> {data.areal} m²</p>
-      <p><span className="font-bold">Sensor ID:</span> {data.sensorId}</p>
+    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-xl">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Rom Detaljer</h2>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <p><span className="font-semibold">Adresse:</span> {data.building}</p>
+        <p><span className="font-semibold">Rom:</span> {data.room}</p>
+        <p><span className="font-semibold">Etasje:</span> {data.floor}</p>
+        <p><span className="font-semibold">Leietaker:</span> {data.leietaker}</p>
+        <p><span className="font-semibold">Rom areal:</span> {data.areal} m²</p>
+        <p><span className="font-semibold">Sensor ID:</span> {data.sensorId}</p>
+      </div>
 
-       <div className="bg-white mt-6 p-3 rounded">
-        <ResponsiveContainer width="100%" height={200}>
+       <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="font-semibold mb-2">CO2 Trend</h3>
+        <ResponsiveContainer width="100%" height={250}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="time" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="co2" stroke="red" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="co2" stroke="#3b82f6" dot={false} strokeWidth={3} />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-sm text-gray-600 mt-1">Sist oppdatert: kl. 19.02</p>
-      <p className="font-bold mt-4">
-        <span className="cursor-pointer hover:underline">Kontakt leietaker</span>
-        {" | "}
-        <span className="cursor-pointer hover:underline">Slå av sensor</span>
-      </p>
+      <p className="text-sm text-gray-500 mt-2">Sist oppdatert: kl. 19.02</p>
+      <div className="mt-4 flex gap-4">
+        <span className="text-blue-600 cursor-pointer hover:underline font-medium">Kontakt leietaker</span>
+        <span className="text-red-600 cursor-pointer hover:underline font-medium">Slå av sensor</span>
+      </div>
 
 
 
