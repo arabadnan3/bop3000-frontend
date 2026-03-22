@@ -32,7 +32,7 @@ function CardDetail({data}) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-sm text-gray-600 mt-1">Sist oppdatert: kl. 19.03</p>
+      <p className="text-sm text-gray-600 mt-1">Sist oppdatert: kl. 19.02</p>
       <p className="font-bold mt-4">
         <span className="cursor-pointer hover:underline">Kontakt leietaker</span>
         {" | "}
