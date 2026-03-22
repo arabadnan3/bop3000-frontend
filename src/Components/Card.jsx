@@ -1,29 +1,7 @@
 
 import React from 'react'
-import { FaExclamationTriangle } from 'react-icons/fa';
+import StatusColor from './StatusColor';
 
-function statusColor(status, co2Value) {
-  if (status === "Feil med sensor") {
-    return <FaExclamationTriangle className="text-yellow-500 text-xl" />;
-  }
-  if (co2Value !== null) {
-    let circleColor = "";
-
-    if (co2Value <= 800) {
-      circleColor = "bg-green-500";
-    } else if (co2Value <= 1000) {
-      circleColor = "bg-yellow-500";
-    } else {
-      circleColor = "bg-red-500";
-    }
-    return (
-      <span className={`inline-block w-3 h-3 rounded-full ${circleColor} mr-2`}>
-
-      </span>
-    );
-  }
-  
-}
 
 function Card({ building, room, floor, status, co2Value }) {
   return (
@@ -40,7 +18,7 @@ function Card({ building, room, floor, status, co2Value }) {
         <p className="text-sm text-gray-700 mb-1">{status}
 
         </p>
-        {statusColor(status, co2Value)}
+        <StatusColor status={status} co2Value={co2Value} />
       </div>
       <p className="text-sm text-gray-700 mb-1">
         {co2Value ? `CO2 Verdi: ${co2Value}` : "CO2 Verdi: ikke tilgjengelig"}
