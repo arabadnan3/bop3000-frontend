@@ -4,9 +4,22 @@ import Navbar from './Navbar'
 import StatusColor  from './StatusColor';
 import { FaExclamationTriangle } from 'react-icons/fa';
 
+const mockSensorLog=[
+    { id: 1, roomId: 101, timestamp: "2026-01-01 23:00:00", ppm: 1900 },
+    { id: 2, roomId: 101, timestamp: "2026-01-01 22:00:00", ppm: 1600 },
+    { id: 3, roomId: 101, timestamp: "2026-01-01 21:00:00", ppm: 960 },
+    { id: 4, roomId: 101, timestamp: "2026-01-01 20:00:00", ppm: 700 },
+    { id: 5, roomId: 101, timestamp: "2026-01-01 19:00:00", ppm: 870 },
+    { id: 6, roomId: 101, timestamp: "2026-01-01 18:00:00", ppm: 560 },
+    { id: 7, roomId: 101, timestamp: "2026-01-01 17:00:00", ppm: 400 },
+    { id: 8, roomId: 101, timestamp: "2026-01-01 16:00:00", ppm: 600 },
+];
+
 function Sensor({mockData, setActivePage}) {
     const [selectedBuilding, setSelectedBuilding] = React.useState(null);
     const[filter, setFilter] = React.useState("all");
+    const [sensorlog, setSensorLog] = React.useState(mockSensorLog);
+    const [selectedRoom, setSelectedRoom] = React.useState(null);
 
     const filteredData = mockData.filter(room => {
         if(filter === "all") return true;
@@ -70,7 +83,7 @@ function Sensor({mockData, setActivePage}) {
                     <p className=" font-bold mb-4">{selectedBuilding}</p>
                     <div className="grid grid-cols-3 gap-4">
                      {filteredData.filter(room => room.building === selectedBuilding).map(room => (
-                        <div key={room.id} className="bg-gray-200 border rounded p-3">
+                        <div key={room.id} onClick={() => setSelectedRoom(room)} className="bg-gray-200 border rounded p-3 cursor-pointer">
                             <p className="text-sm font-semibold">{room.room}</p>
                             <p className="text-xs text-gray-600 mb-2">{room.floor}</p>
                             <p className="text-xs text-gray-600 mb-2">Sensor ID: {room.sensorId}</p>
@@ -82,6 +95,22 @@ function Sensor({mockData, setActivePage}) {
                         </div>
                     ))}
                     </div>
+                    {selectedRoom && (
+                        <div className="mt-6">
+                            <p className="text-lg font-bold mb-2">Sensorlogg for {selectedRoom.room}</p>
+                            <div className="overflow-y-scroll max-h-72 border border-gray-300 rounded">
+                                {sensorlog.map(reading => (
+                                    <div key={reading.id} className="flex items-center px-3 py-3 bg-gray-200">
+                                        <p className="w-52 font-bold">{reading.timestamp}</p>
+                                        <p className="flex-1 font-bold">{reading.ppm} ppm</p>
+                                        <span className={`w-4 h-4 rounded-full ${reading.ppm > 1000 ? "bg-red-500" : reading.ppm > 600 ? "bg-yellow-400" : "bg-green-500"}`}>
+
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <p className=" text-gray-400">Velg en bygning for å se detaljer</p>    
