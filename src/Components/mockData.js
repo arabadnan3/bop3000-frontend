@@ -10,3 +10,10 @@ export const mockData = [
     { id: 9, building: "Omega (Bredalsvein 16A)", room: "Rom 108", floor: "1. Etg", status: "Farlig Co2 Nivå!", co2Value: 980, leietaker: "Ida Storm", areal: 27, sensorId: 1009 },
     { id: 10, building: "Luna (Bredalsveien 16C)", room: "Rom 204", floor: "2. Etg", status: "Normalt Co2 Nivå", co2Value: 500, leietaker: "Ole Strand", areal: 24, sensorId: 1010 },
 ];
+
+export const mockBuildings = [
+    { id: 1, name: "Luna", address: "Bredalsveien 16B", poststed: "Hønefoss", postnummer: "3511" },
+    { id: 2, name: "Terra", address: "Bredalsveien 16A", poststed: "Hønefoss", postnummer: "3511" },
+    { id: 3, name: "Sigma", address: "Bredalsveien 16C", poststed: "Hønefoss", postnummer: "3511" },
+    { id: 4, name: "Omega", address: "Bredalsveien 16D", poststed: "Hønefoss", postnummer: "3511" },
+];

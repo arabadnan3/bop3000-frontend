@@ -1,8 +1,7 @@
 import React , {useState} from 'react'
 import Navbar from './Navbar';
-// { mockData } from "./mockData.js";
 
-function Settings({buildingData, setActivePage }) {
+function Settings({buildingData = [], setActivePage }) {
     const [activeTab, setActiveTab] = useState("");
     const[selectedBuilding, setSelectedBuilding] = useState(null);
     return (

@@ -1,10 +1,16 @@
-import React, { useState } from 'react'
-import Dashboard from './Components/Dashboard';
-import Sensors from './Components/Sensors';
-import Settings from "./Components/Settings.jsx";
+import React, { useState } from "react";
+import Settings from "./Components/Settings";
+import { mockBuildings } from "./Components/mockData";
 
 function App() {
-  return <Settings />
+  const [activePage, setActivePage] = useState("settings");
+
+  return (
+      <Settings
+          buildingData={mockBuildings}
+          setActivePage={setActivePage}
+      />
+  );
 }
 
 export default App;
