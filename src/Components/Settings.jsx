@@ -1,12 +1,17 @@
 import React , {useState} from 'react'
 import Navbar from './Navbar';
 
-function Settings({buildingData = [], setActivePage }) {
+function Settings({ buildingData }) {
     const [activeTab, setActiveTab] = useState("");
     const[selectedBuilding, setSelectedBuilding] = useState(null);
     return (
         <div>
-            <Navbar activePage="settings" setActivePage={setActivePage} />
+            <div>
+                <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
+                    USN Studentbygg - CO2 Observasjon
+                </h1>
+            </div>
+            <Navbar />
             <div className="flex items-center justify-between px-6 mt-4 border-b border-gray-300 pb-2">
                 <p className="text-lg font-bold underline">Kontroll panel</p>
                 <div className="flex gap-2 mt-2">

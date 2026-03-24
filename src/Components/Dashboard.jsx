@@ -1,9 +1,8 @@
 import React, {useState} from 'react'
 import CardDetail from './CardDetail';
 import Navbar from './Navbar';
-import { mockData } from "./mockData";
 
-function Dashboard() {
+function Dashboard({ mockData }) {
 
     const [selectedCard, setSelectedCard] = useState(null);
     const [selectedBuilding, setSelectedBuilding] = useState('');

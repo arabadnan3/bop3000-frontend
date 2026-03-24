@@ -2,7 +2,6 @@ import React from 'react'
 import Navbar from './Navbar'
 import StatusColor from './StatusColor'
 import { FaExclamationTriangle } from 'react-icons/fa'
-import { mockData } from "./mockData";
 
 const mockSensorLog = [
     { id: 1, roomId: 101, timestamp: "2026-01-01 23:00:00", ppm: 1900 },
@@ -15,10 +14,10 @@ const mockSensorLog = [
     { id: 8, roomId: 101, timestamp: "2026-01-01 16:00:00", ppm: 600 },
 ];
 
-function Sensor({ setActivePage }) {
+function Sensor({ mockData }) {
     const [selectedBuilding, setSelectedBuilding] = React.useState(null);
     const [filter, setFilter] = React.useState("all");
-    const [sensorlog, setSensorLog] = React.useState(mockSensorLog);
+    const [sensorlog] = React.useState(mockSensorLog);
     const [selectedRoom, setSelectedRoom] = React.useState(null);
 
     const filteredData = mockData.filter(room => {
@@ -38,7 +37,7 @@ function Sensor({ setActivePage }) {
                     USN Studentbygg - CO2 Observasjon
                 </h1>
             </div>
-            <Navbar activePage="sensor" setActivePage={setActivePage} />
+            <Navbar />
             <div className="flex gap-4 px-6 mt-4">
                 <div className="w-72 shrink-0">
                     <select value={filter} onChange={e => {setFilter(e.target.value); setSelectedBuilding(null)}}
