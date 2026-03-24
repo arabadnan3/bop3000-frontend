@@ -18,6 +18,7 @@ const mockSensorLog = [
 function Sensor({ setActivePage }) {
     const [selectedBuilding, setSelectedBuilding] = React.useState(null);
     const [filter, setFilter] = React.useState("all");
+    const [sensorlog, setSensorLog] = React.useState(mockSensorLog);
     const [selectedRoom, setSelectedRoom] = React.useState(null);
 
     const filteredData = mockData.filter(room => {
@@ -32,6 +33,11 @@ function Sensor({ setActivePage }) {
     const buildingNames = [...new Set(filteredData.map(item => item.building))];
     return (
         <div>
+            <div>
+                <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
+                    USN Studentbygg - CO2 Observasjon
+                </h1>
+            </div>
             <Navbar activePage="sensor" setActivePage={setActivePage} />
             <div className="flex gap-4 px-6 mt-4">
                 <div className="w-72 shrink-0">
