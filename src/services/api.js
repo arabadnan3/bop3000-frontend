@@ -6,6 +6,16 @@ export const api = {
         return response.json();
     },
 
+    getRoomsFromBuilding: async (buildingId) => {
+        const response = await fetch(`${API_BASE_URL}/rooms/building/${buildingId}`);
+        return response.json();
+    },
+
+    getRoomDetails: async (roomId) => {
+        const response = await fetch(`${API_BASE_URL}/rooms/details/${roomId}`);
+        return response.json();
+    },
+
     getRooms: async () => {
         const response = await fetch(`${API_BASE_URL}/rooms`);
         return response.json();

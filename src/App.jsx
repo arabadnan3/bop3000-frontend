@@ -10,7 +10,7 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/dashboard" element={<Dashboard mockData={mockData} />}/>
+                <Route path="/dashboard" element={<Dashboard />}/>
                 <Route path="/sensors" element={<Sensors mockData={mockData} />}/>
                 <Route path="/settings" element={<Settings buildingData={mockBuildings} />}/>
                 <Route path="*" element={<Navigate to="/dashboard" />} />
