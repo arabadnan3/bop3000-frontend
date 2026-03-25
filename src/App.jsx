@@ -14,7 +14,6 @@ function App() {
                 <Route path="/sensors" element={<Sensors mockData={mockData} />}/>
                 <Route path="/settings" element={<Settings buildingData={mockBuildings} />}/>
                 <Route path="*" element={<Navigate to="/dashboard" />} />
-
             </Routes>
         </BrowserRouter>
     );
