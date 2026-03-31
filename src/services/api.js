@@ -39,5 +39,20 @@ export const api = {
     getSensors: async () => {
         const response = await fetch(`${API_BASE_URL}/sensors`);
         return response.json();
-    }
+    },
+
+    getSensorReadings: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings`);
+        return response.json();
+    },
+
+    getSensorReadingsBySensor: async (sensorId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings/sensors/${sensorId}`);
+        return response.json();
+    },
+
+    getSensorRules: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensor_rules`);
+        return response.json();
+    },
 };
