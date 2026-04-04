@@ -1,22 +1,64 @@
 import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { FaTachometerAlt, FaMicrochip, FaExclamationTriangle } from 'react-icons/fa'
+import { FaGear } from "react-icons/fa6"
 
-function Navbar({activePage, setActivePage}) {
+function Navbar() {
+    const location = useLocation()
+
+    const base =
+        "flex items-center gap-2 text-lg font-semibold px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-200 transition duration-200"
+
+    const active = "bg-blue-500 text-white"
+    const normal = "bg-gray-100 text-gray-700"
+
+
+
   return (
     <div>
-      <h1 className=" text-3xl p-6 bg-gray-300 border text-black font-bold mb-4">USN Studentbygg - CO2 Observasjon</h1>
-       <div className="flex justify-between items-center px-4 py-2 bg-gray-200 border-b">
-        <div className="flex gap-2">
-          <button onClick={() => setActivePage('dashboard')} className=" text-lg font-bold text-black-700 mb-6 p-2 bg-gray-300 border rounded cursor-pointer hover:underline">Dashboard </button>
-            <button onClick={() => setActivePage('sensor')} className="text-lg font-bold text-black-700 ms-2 border rounded mb-6 p-2 bg-gray-300 cursor-pointer hover:underline"> Sensor  </button>
-            <button onClick={() => setActivePage('notifikasjoner')} className="text-lg font-bold text-black-700 ms-2 border rounded mb-6 p-2 bg-gray-300 cursor-pointer hover:underline"> Notifikasjoner </button>
-            <button onClick={() => setActivePage('settings')} className="text-lg font-bold text-black-700 ms-2 border rounded mb-6 p-2 bg-gray-300 cursor-pointer hover:underline"> Settings </button> 
+        <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
+                    USN Studentbygg - CO2 Observasjon
+        </h1>
+
+        <div className="flex flex-wrap gap-4 px-8 py-4 bg-white shadow-md rounded-lg mx-8 mb-6">
+           
+
+            <Link
+                to="/dashboard"
+                className={`${base} ${location.pathname === "/dashboard" ? active : normal}`}
+            >
+                <FaTachometerAlt /> Dashboard
+            </Link>
+
+            <Link
+                to="/sensors"
+                className={`${base} ${location.pathname === "/sensors" ? active : normal}`}
+            >
+                <FaMicrochip /> Sensor
+            </Link>
+
+            <Link
+                to="/settings"
+                className={`${base} ${location.pathname === "/settings" ? active : normal}`}
+            >
+                <FaGear /> Innstillinger
+            </Link>
+
+            <Link
+                to="/warnings"
+                className={`${base} ${location.pathname === "/warnings"
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-100 text-red-600"
+                }`}
+            >
+                <FaExclamationTriangle /> Varslinger
+            </Link>
+
         </div>
-
-
-       </div>
-
     </div>
-  )
+    )
 }
 
 export default Navbar
+
+       
