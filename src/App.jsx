@@ -3,7 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sensor from './Components/Sensor';
 import Settings from './Components/Settings';
 import Dashboard from "./Components/Dashboard";
-import { mockData, mockBuildings } from "./Components/mockData";
+import { mockData, mockBuildings, sensorAlerts } from "./Components/mockData";
+import Varslinger from './Components/Varslinger';
 
 
 
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/sensors" element={<Sensor mockData={mockData} />}/>
                 <Route path="/settings" element={<Settings buildingData={mockBuildings} mockData={mockData} />}/>
                 <Route path="*" element={<Navigate to="/dashboard" />} />
+                <Route path="/warnings" element={<Varslinger sensorAlerts= {sensorAlerts} mockData={mockData} />} />
              
                
             </Routes>

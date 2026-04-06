@@ -20,3 +20,14 @@ export const mockBuildings = [
     { id: 4, name: "Omega", address: "Bredalsveien 16D", poststed: "Hønefoss", postnummer: "3511" },
 ];
 
+export const sensorAlerts =[
+    { id: 2, building: "Terra (Bredalsveien 16B)", room: "Rom 109", floor: "1. Etg.", co2Value: 1200, severity: "CRITICAL", leietaker: "Kari Olsen", areal: 25, sensorId: 2, sensorSerial: "SN-CO2-002" },
+    { id: 4, building: "Omega (Bredalsveien 16A)", room: "Rom 405", floor: "4. Etg.", co2Value: 900, severity: "CRITICAL", leietaker: "Line Berg", areal: 35, sensorId: 4, sensorSerial: "SN-CO2-004" },
+    { id: 7, building: "Luna (Bredalsveien 16C)", room: "Rom 412", floor: "4. Etg.", co2Value: 1350, severity: "CRITICAL", leietaker: "Mona Vik", areal: 18, sensorId: 7, sensorSerial: "SN-CO2-007" },
+    { id: 12, building: "Sigma (Bredalsveien 16D)", room: "Rom 202", floor: "2. Etg.", co2Value: 1300, severity: "CRITICAL", leietaker: "Bjørn Lie", areal: 25, sensorId: 12, sensorSerial: "SN-CO2-012" },
+    { id: 6, building: "Omega (Bredalsveien 16A)", room: "Rom 210", floor: "2. Etg.", co2Value: 750, severity: "WARNING", leietaker: "Erik Dahl", areal: 28, sensorId: 6, sensorSerial: "SN-CO2-006" },
+    { id: 9, building: "Omega (Bredalsveien 16A)", room: "Rom 108", floor: "1. Etg.", co2Value: 980, severity: "WARNING", leietaker: "Ida Storm", areal: 27, sensorId: 9, sensorSerial: "SN-CO2-009" },
+    
+];
+
+
