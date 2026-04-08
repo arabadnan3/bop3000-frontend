@@ -36,9 +36,9 @@ function Sensors() {
                 const building = buildings.find(b => b.id === room.buildingId);
                 // Koble sensor til rom via roomId
                 const sensor = sensors.find(s => s.roomId === room.id);
-                const leaseRoom = leaseRooms.find(lr => lr.room?.id === room.id);
-                const lease = leaseRoom ? leases.find(l => l.id === leaseRoom.lease?.id) : null;
-                const tenant = lease ? tenants.find(t => t.id === lease.tenant?.id) : null;
+                const leaseRoom = leaseRooms.find(lr => lr.roomId === room.id);
+                const lease = leaseRoom ? leases.find(l => l.id === leaseRoom.leaseId) : null;
+                const tenant = lease ? tenants.find(t => t.id === lease.tenantId) : null;
 
                 // Hent siste CO2-verdi for denne sensoren
                 let co2Value = null;
@@ -82,7 +82,7 @@ function Sensors() {
                     floor: `${room.roomFloor}. Etg.`,
                     status: status,
                     co2Value: co2Value,
-                    leietaker: tenant ? `${tenant.first_name} ${tenant.last_name}` : 'Ingen leietaker',
+                    leietaker: tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Ingen leietaker',
                     areal: room.roomSize,
                     sensorId: sensor ? sensor.id : null,
                     sensorSerial: sensor ? sensor.sensorSerial : null,
