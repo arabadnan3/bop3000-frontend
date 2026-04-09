@@ -67,11 +67,14 @@ function Dashboard() {
     }, [selectedBuilding]);
 
     const handleRoomClick = async (roomId) => {
+        console.log('Clicked roomId:', roomId);
+
         try {
             setCardLoading(true);
             setCardError('');
 
             const roomDetails = await api.getRoomDetails(roomId);
+            console.log('Room details response:', roomDetails);
             setSelectedCard(roomDetails);
         } catch (err) {
             setCardError('Failed to load room details');
