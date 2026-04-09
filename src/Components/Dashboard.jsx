@@ -8,55 +8,42 @@ function Dashboard() {
     const [selectedBuilding, setSelectedBuilding] = useState('');
     const [buildings, setBuildings] = useState([]);
     const [rooms, setRooms] = useState([]);
-    const [sensors, setSensors] = useState([]);
-    const [leaseRooms, setLeaseRooms] = useState([]);
-    const [leases, setLeases] = useState([]);
-    const [tenants, setTenants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [roomsLoading, setRoomsLoading] = useState(false);
+    const [cardLoading, setCardLoading] = useState(false);
     const [error, setError] = useState('');
     const [roomsError, setRoomsError] = useState('');
+    const [cardError, setCardError] = useState('');
 
-    // Hent all data ved oppstart
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchBuildings = async () => {
             try {
-                const [buildingsData, sensorsData, leaseRoomsData, leasesData, tenantsData] = await Promise.all([
-                    api.getBuildings(),
-                    api.getSensors(),
-                    api.getLeaseRooms(),
-                    api.getLeases(),
-                    api.getTenants()
-                ]);
+                const data = await api.getBuildings();
 
-                const mappedBuildings = buildingsData.map((building) => ({
+                const mappedBuildings = data.map((building) => ({
                     id: building.id,
                     name: building.name,
                     address: `${building.streetName} ${building.streetNumber}`
                 }));
 
                 setBuildings(mappedBuildings);
-                setSensors(sensorsData);
-                setLeaseRooms(leaseRoomsData);
-                setLeases(leasesData);
-                setTenants(tenantsData);
             } catch (err) {
-                setError('Failed to load data');
+                setError('Failed to load buildings');
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData();
+        fetchBuildings();
     }, []);
 
-    // Hent rom når bygning velges
     useEffect(() => {
         const fetchRooms = async () => {
             if (!selectedBuilding) {
                 setRooms([]);
                 setSelectedCard(null);
+                setCardError('');
                 return;
             }
 
@@ -64,6 +51,7 @@ function Dashboard() {
                 setRoomsLoading(true);
                 setRoomsError('');
                 setSelectedCard(null);
+                setCardError('');
 
                 const data = await api.getRoomsFromBuilding(selectedBuilding);
                 setRooms(data);
@@ -78,33 +66,26 @@ function Dashboard() {
         fetchRooms();
     }, [selectedBuilding]);
 
-    // Bygg romdetaljer når et rom klikkes
-    const handleRoomClick = (room) => {
-        const building = buildings.find(b => b.id === parseInt(selectedBuilding));
-        const sensor = sensors.find(s => s.roomId === room.id);
-        const leaseRoom = leaseRooms.find(lr => lr.roomId === room.id);
-        const lease = leaseRoom ? leases.find(l => l.id === leaseRoom.leaseId) : null;
-        const tenant = lease ? tenants.find(t => t.id === lease.tenantId) : null;
+    const handleRoomClick = async (roomId) => {
+        console.log('Clicked roomId:', roomId);
 
-        const roomDetails = {
-            roomId: room.id,
-            roomCode: room.roomCode,
-            floor: room.roomFloor,
-            roomSize: room.roomSize,
-            address: building ? building.address : 'Ukjent',
-            tenantFirstName: tenant?.firstName || null,
-            tenantLastName: tenant?.lastName || null,
-            tenantPhone: tenant?.phone || null,
-            tenantEmail: tenant?.email || null,
-            sensorSerial: sensor?.sensorSerial || null,
-            sensorStatus: sensor ? (sensor.sensorStatus ? 'Aktiv' : 'Inaktiv') : 'Ingen sensor'
-        };
+        try {
+            setCardLoading(true);
+            setCardError('');
 
-        setSelectedCard(roomDetails);
+            const roomDetails = await api.getRoomDetails(roomId);
+            console.log('Room details response:', roomDetails);
+            setSelectedCard(roomDetails);
+        } catch (err) {
+            setCardError('Failed to load room details');
+            console.error(err);
+        } finally {
+            setCardLoading(false);
+        }
     };
 
     const selectedBuildingData = buildings.find(
-        (building) => building.id === parseInt(selectedBuilding)
+        (building) => building.id === selectedBuilding
     );
 
     if (loading) return <p>Loading...</p>;
@@ -163,7 +144,7 @@ function Dashboard() {
                                 {!roomsLoading && !roomsError && rooms.map((item) => (
                                     <button
                                         key={item.id}
-                                        onClick={() => handleRoomClick(item)}
+                                        onClick={() => handleRoomClick(item.id)}
                                         className={`w-full text-left p-4 rounded-lg border transition duration-200 ${
                                             selectedCard?.roomId === item.id
                                                 ? 'bg-blue-100 border-blue-400'
@@ -177,6 +158,18 @@ function Dashboard() {
                                         <div className="text-sm text-gray-600">
                                             Etg. {item.roomFloor}
                                         </div>
+
+                                        <div className="text-sm mt-1">
+                                            {item.status === 'Farlig Co2 Nivå!' && (
+                                                <span className="text-red-600 font-medium">{item.status}</span>
+                                            )}
+                                            {item.status === 'Normalt Co2 Nivå' && (
+                                                <span className="text-green-600 font-medium">{item.status}</span>
+                                            )}
+                                            {item.status === 'Feil med sensor' && (
+                                                <span className="text-yellow-600 font-medium">{item.status}</span>
+                                            )}
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -185,7 +178,18 @@ function Dashboard() {
                 </div>
 
                 <div className="flex-1 p-6">
-                    {selectedCard ? (
+                    {cardLoading ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-500 text-lg">
+                                Laster romdetaljer...
+                            </p>
+                            <div className="mt-4 text-6xl opacity-20">🏢</div>
+                        </div>
+                    ) : cardError ? (
+                        <div className="text-center py-12">
+                            <p className="text-red-500 text-lg">{cardError}</p>
+                        </div>
+                    ) : selectedCard ? (
                         <CardDetail data={selectedCard} />
                     ) : (
                         <div className="text-center py-12">
