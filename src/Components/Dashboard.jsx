@@ -93,13 +93,7 @@ function Dashboard() {
 
     return (
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-            <div>
-                <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
-                    USN Studentbygg - CO2 Observasjon
-                </h1>
                 <Navbar />
-            </div>
-
             <div className="flex gap-6 px-8 py-4">
                 <div className="w-[420px] p-4">
                     <div className="mb-8 p-6 border border-gray-200 rounded-xl bg-white shadow-xl">

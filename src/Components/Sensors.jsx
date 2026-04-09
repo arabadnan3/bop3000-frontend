@@ -32,11 +32,6 @@ function Sensor({ mockData }) {
     const buildingNames = [...new Set(filteredData.map(item => item.building))];
     return (
         <div>
-            <div>
-                <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
-                    USN Studentbygg - CO2 Observasjon
-                </h1>
-            </div>
             <Navbar />
             <div className="flex gap-4 px-6 mt-4">
                 <div className="w-72 shrink-0">
