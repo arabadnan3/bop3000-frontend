@@ -11,8 +11,8 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/dashboard" element={<Dashboard />}/>
-                <Route path="/sensors" element={<Sensors mockData={mockData} />}/>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/sensors" element={<Sensors />} />
                 <Route path="/settings" element={<Settings buildingData={mockBuildings} mockData={mockData} />}/>
                 <Route path="/warnings" element={<Warnings sensorAlerts= {sensorAlerts} mockData={mockData} />} />
                 <Route path="*" element={<Navigate to="/dashboard" />} />
