@@ -11,27 +11,27 @@ function Settings({buildingData, mockData }) {
     const [sensorMode, setSensorMode] = useState(null);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-slate-950 min-h-screen">
         <Navbar />
 
-        <div className="bg-white px-6 pt-6">
+        <div className="bg-slate-800 px-6 pt-6 border-t border-slate-700">
             
             {/* Top Bar under Navbar*/}
 
-            <div className="flex items-center gap-6 border-b border-gray-300 pb-2">
-                <p className="text-lg font-bold underline whitespace-nowrap">Kontroll panel</p>
+            <div className="flex items-center gap-6 border-b border-slate-700 pb-2">
+                <p className="text-lg font-bold underline whitespace-nowrap text-white">Kontroll panel</p>
             
                 <button onClick={() => {setActiveTab("bygning"); setSelectedBuilding(null); setSelectedSensor(null); }}
-                    className={`pb-1 font-semibold cursor-pointer ${
-                        activeTab === "bygning" ? "border-b-2 border-black text-black" : "text-gray-500"
+                    className={`pb-1 font-semibold cursor-pointer transition duration-200 ${
+                        activeTab === "bygning" ? "border-b-2 border-blue-500 text-blue-400" : "text-slate-400 hover:text-slate-200"
                     }`}
                 > 
                     Bygning
                 </button>
 
                 <button onClick={() => {setActiveTab("sensorer"); setSelectedBuilding(null); setSelectedSensor(null); }}
-                    className={`pb-1 font-semibold cursor-pointer ${
-                        activeTab === "sensorer" ? "border-b-2 border-black text-black" : "text-gray-500"
+                    className={`pb-1 font-semibold cursor-pointer transition duration-200 ${
+                        activeTab === "sensorer" ? "border-b-2 border-blue-500 text-blue-400" : "text-slate-400 hover:text-slate-200"
                     }`}
                 >
                     Sensor
@@ -40,7 +40,7 @@ function Settings({buildingData, mockData }) {
                 {activeTab === "sensorer" && (
                     <button
                         onClick={() => setSelectedSensor("ny")}
-                        className="ml-auto py-2 px-5 bg-gray-300 font-bold text-base rounded cursor-pointer hover:bg-gray-400"
+                        className="ml-auto py-2 px-5 bg-blue-600 font-bold text-base rounded-lg cursor-pointer hover:bg-blue-700 transition duration-200 text-white"
                     >
                         + Legg til sensor
                     </button>
@@ -55,7 +55,7 @@ function Settings({buildingData, mockData }) {
                         <div className="w-72 shrink-0 flex flex-col gap-2">
                             <button
                                 onClick={() => setSelectedBuilding("ny")}
-                                className="w-full py-2 bg-gray-300 font-bold rounded cursor-pointer hover:bg-gray-400"
+                                className="w-full py-2 bg-blue-600 font-bold rounded-lg cursor-pointer hover:bg-blue-700 transition duration-200 text-white"
                             >
                                 + Legg til bygning
                             </button>
@@ -65,15 +65,15 @@ function Settings({buildingData, mockData }) {
                                     <div 
                                         key={building.id}
                                         onClick={() => {setSelectedBuilding(building); setIsBuildingEditing(false); }}
-                                        className={`border rounded p-3 cursor-pointer ${
+                                        className={`border rounded-lg p-3 cursor-pointer transition duration-200 ${
                                             selectedBuilding?.id === building.id 
-                                                ? "bg-gray-300 border black"
-                                                : "bg-gray-200 border-gray-300"
+                                                ? "bg-blue-600 border-blue-500 text-white"
+                                                : "bg-slate-700 border-slate-600 text-slate-100 hover:bg-slate-600"
                                         }`}
                                     >
                                         <p className="text-base font-semibold ">{building.name}</p>
-                                        <p className="text-sm text-gray-500 ">{building.address}</p>
-                                        <p className="text-sm text-gray-500">{building.postnummer} {building.poststed}</p>
+                                        <p className="text-sm opacity-75 ">{building.address}</p>
+                                        <p className="text-sm opacity-75">{building.postnummer} {building.poststed}</p>
                                     </div>
               
                                 ))}
@@ -83,11 +83,11 @@ function Settings({buildingData, mockData }) {
 
                         {/*Right side*/}
 
-                        <div className="flex-1 border border-gray-300 rounded bg-gray-50 p-4 min-h-[60vh] ">
+                        <div className="flex-1 border border-slate-700 rounded-lg bg-slate-800 p-4 min-h-[60vh] ">
 
                             {/* Empty state */}
                             {!selectedBuilding && (
-                                <p className="text-gray-400 text-center mt-20">
+                                <p className="text-slate-400 text-center mt-20">
                                     Velg en bygning for å se detaljer, eller klikk «Legg til bygning»
                                 </p>
                             )}
@@ -98,30 +98,30 @@ function Settings({buildingData, mockData }) {
                                     e.preventDefault(); 
                                 }}>
                                     <div className="flex flex-col gap-4">
-                                        <p className="text-lg font-bold"> Legg til bygning </p>
+                                        <p className="text-lg font-bold text-white"> Legg til bygning </p>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Bygning navn:</label>
-                                            <input type="text" placeholder="Bygning navn" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold text-slate-100">Bygning navn:</label>
+                                            <input type="text" placeholder="Bygning navn" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Adresse:</label>
-                                            <input type="text" placeholder="Adresse" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold text-slate-100">Adresse:</label>
+                                            <input type="text" placeholder="Adresse" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Postnummer:</label>
-                                            <input type="text" placeholder="Postnummer" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold text-slate-100">Postnummer:</label>
+                                            <input type="text" placeholder="Postnummer" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Poststed:</label>
-                                            <input type="text" placeholder="Poststed" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold text-slate-100">Poststed:</label>
+                                            <input type="text" placeholder="Poststed" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                         </div>
                                     </div>
 
-                                    <button type="submit" className="py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
+                                    <button type="submit" className="py-2 px-4 bg-blue-600 font-bold rounded-lg cursor-pointer hover:bg-blue-700 transition duration-200 text-white mt-4">
                                         Legg til
                                     </button>
                                 </form>
@@ -138,11 +138,11 @@ function Settings({buildingData, mockData }) {
                                 }}>
 
                                 <div className="flex flex-col gap-4">
-                                    <p className="text-lg font-bold">Legg til rom</p>
+                                    <p className="text-lg font-bold text-white">Legg til rom</p>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-36 text-right font-bold">Bygning:</label>
-                                        <select className="p-2 border rounded bg-white w-64 cursor-pointer" required>
+                                        <label className="w-36 text-right font-bold text-slate-100">Bygning:</label>
+                                        <select className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                                             <option value="">Velg bygning</option>
                                             {buildingData.map(b => (
                                                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -151,23 +151,23 @@ function Settings({buildingData, mockData }) {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-36 text-right font-bold">Rom kode:</label>
-                                        <input type="number" placeholder="F.eks. 101" className="p-2 border rounded bg-white w-64" required />
+                                        <label className="w-36 text-right font-bold text-slate-100">Rom kode:</label>
+                                        <input type="number" placeholder="F.eks. 101" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-36 text-right font-bold">Etasje:</label>
-                                        <input type="number" placeholder="F.eks. 1" className="p-2 border rounded bg-white w-64" required />
+                                        <label className="w-36 text-right font-bold text-slate-100">Etasje:</label>
+                                        <input type="number" placeholder="F.eks. 1" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-36 text-right font-bold">Areal (m²):</label>
-                                        <input type="number" placeholder="F.eks. 25" className="p-2 border rounded bg-white w-64" required />
+                                        <label className="w-36 text-right font-bold text-slate-100">Areal (m²):</label>
+                                        <input type="number" placeholder="F.eks. 25" className="p-2 border border-slate-600 rounded-lg bg-slate-700 text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <div className="w-36" />
-                                        <button type="submit" className="py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
+                                        <button type="submit" className="py-2 px-4 bg-blue-600 font-bold rounded-lg cursor-pointer hover:bg-blue-700 transition duration-200 text-white">
                                             Legg til
                                         </button>
                                     </div>
@@ -179,7 +179,7 @@ function Settings({buildingData, mockData }) {
 
                             {selectedBuilding && selectedBuilding !== "ny" && selectedBuilding !== "ny-rom" && (
                                 <div key={selectedBuilding.id} className="flex flex-col gap-4">
-                                    <p className="text-lg font-bold">{selectedBuilding.name}</p>
+                                    <p className="text-lg font-bold text-white">{selectedBuilding.name}</p>
 
                                     {[
                                         { label: "Adresse", value: selectedBuilding.address },
@@ -187,13 +187,13 @@ function Settings({buildingData, mockData }) {
                                         { label: "Poststed", value: selectedBuilding.poststed },
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">{label}:</label>
+                                            <label className="w-36 text-right font-bold text-slate-100">{label}:</label>
                                             <input
                                                 type="text"
                                                 defaultValue={value}
                                                 readOnly={!isBuildingEditing}
-                                                className={`p-2 border rounded w-64 ${
-                                                    isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                                className={`p-2 border rounded-lg w-64 ${
+                                                    isBuildingEditing ? "bg-slate-700 border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" : "bg-slate-700 border-slate-600 text-slate-300 cursor-default"
                                                 }`}
                                             />
                                         </div>
@@ -202,10 +202,10 @@ function Settings({buildingData, mockData }) {
                                     <div className="flex flex-col gap-2 mt-2">
                                         <button
                                             onClick={() => setIsBuildingEditing(prev => !prev)}
-                                            className={`w-64 py-2 px-4 font-semibold rounded cursor-pointer border text-left ${
+                                            className={`w-64 py-2 px-4 font-semibold rounded-lg cursor-pointer border text-left transition duration-200 ${
                                                 isBuildingEditing
-                                                    ? "bg-black text-white border-black hover:bg-gray-800"
-                                                    : "bg-gray-200 border-gray-400 hover:bg-gray-300"
+                                                    ? "bg-blue-600 text-white border-blue-500 hover:bg-blue-700"
+                                                    : "bg-blue-600 border-blue-500 text-white hover:bg-blue-700"
                                             }`}
                                         >
                                             {isBuildingEditing ? "Lagre endringer" : "Endre bygninginformasjon"}
@@ -214,7 +214,7 @@ function Settings({buildingData, mockData }) {
                                         {isBuildingEditing && (
                                             <button
                                                 onClick={() => setIsBuildingEditing(false)}
-                                                className="w-64 py-2 px-4 bg-gray-100 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-200 text-left"
+                                                className="w-64 py-2 px-4 bg-slate-700 border border-slate-600 font-semibold rounded-lg cursor-pointer hover:bg-slate-600 text-slate-100 transition duration-200 text-left"
                                             >
                                                 Avbryt
                                             </button>
@@ -222,7 +222,7 @@ function Settings({buildingData, mockData }) {
 
                                         <button
                                             onClick={() => setSelectedBuilding("ny-rom")}
-                                            className="w-64 py-2 px-4 bg-gray-200 border border-gray-400 font-semibold rounded cursor-pointer hover:bg-gray-300 text-left"
+                                            className="w-64 py-2 px-4 bg-slate-700 border border-slate-600 font-semibold rounded-lg cursor-pointer hover:bg-slate-600 text-slate-100 transition duration-200 text-left"
                                         >
                                             Legg til rom
                                         </button>
@@ -242,10 +242,10 @@ function Settings({buildingData, mockData }) {
                         <div className="w-72 shrink-0 flex flex-col gap-2">
 
                             {/* Building dropdown filter */}
-                            <div className="border border-gray-400 rounded bg-gray-100 p-2">
-                                <label className="text-xs text-gray-500 font-semibold">Bygg</label>
+                            <div className="border border-slate-600 rounded-lg bg-slate-700 p-2">
+                                <label className="text-xs text-slate-400 font-semibold">Bygg</label>
                                 <select
-                                    className="w-full bg-transparent font-semibold mt-1 cursor-pointer outline-none"
+                                    className="w-full bg-slate-700 text-white font-semibold mt-1 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 rounded"
                                     onChange={e => {
                                         setSelectedBuilding(buildingData.find(b => b.id === Number(e.target.value)) || null);
                                         setSelectedSensor(null);
@@ -268,15 +268,15 @@ function Settings({buildingData, mockData }) {
                                         <div
                                             key={sensor.sensorId}
                                             onClick={() => { setSelectedSensor(sensor); setIsEditing(false); }}
-                                            className={`border rounded p-3 cursor-pointer flex justify-between items-center ${
+                                            className={`border rounded-lg p-3 cursor-pointer flex justify-between items-center transition duration-200 ${
                                                 selectedSensor?.sensorId === sensor.sensorId
-                                                    ? "bg-gray-400 border-black"
-                                                    : "bg-gray-200 border-gray-300"
+                                                    ? "bg-blue-600 border-blue-500 text-white"
+                                                    : "bg-slate-700 border-slate-600 text-slate-100 hover:bg-slate-600"
                                             }`}
                                         >
                                             <div>
                                                 <p className="font-bold text-sm">SN-C02-{sensor.sensorId}</p>
-                                                <p className="text-xs text-gray-600">{sensor.building} | {sensor.room}</p>
+                                                <p className="text-xs opacity-75">{sensor.building} | {sensor.room}</p>
                                             </div>
                                             <div className={`w-4 h-4 rounded-full ${
                                                 sensor.status === "Normalt Co2 Nivå" ? "bg-green-500" : "bg-red-500"
@@ -288,11 +288,11 @@ function Settings({buildingData, mockData }) {
                         </div>
 
                         {/* Right side */}
-                        <div className="flex-1 border border-gray-300 rounded bg-gray-50 p-4 min-h-[60vh]">
+                        <div className="flex-1 border border-slate-700 rounded-lg bg-slate-800 p-4 min-h-[60vh]\">
 
                             {/* Empty state */}
                             {!selectedSensor && (
-                                <p className="text-gray-400 text-center mt-20">
+                                <p className="text-slate-400 text-center mt-20">
                                     Velg en sensor for å se detaljer, eller klikk «Legg til sensor» for å opprette en ny
                                 </p>
                             )}

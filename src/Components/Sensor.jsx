@@ -32,10 +32,10 @@ function Sensor({mockData, setActivePage}) {
     return (
     <div>
         <Navbar activePage="sensor" setActivePage={setActivePage} />
-        <div className="flex gap-4 px-6 mt-4">
+        <div className="flex gap-4 px-6 mt-4 bg-slate-950 min-h-screen pb-6">
             <div className="w-72 shrink-0">
                 <select value={filter} onChange={e => {setFilter(e.target.value); setSelectedBuilding(null)}}
-                className="mb-4 p-2 border rounded w-full bg-white text-sm cursor-pointer">
+                className="mb-4 p-2 border border-slate-600 rounded w-full bg-slate-700 text-slate-100 text-sm cursor-pointer">
                     <option value="all">Alle sensorer</option>
                     <option value="green">Normalt (under 800)</option>
                     <option value="yellow">Moderat (801-1000 )</option>
@@ -64,32 +64,32 @@ function Sensor({mockData, setActivePage}) {
                     });
                     return (
                     <div key={name} onClick={() => setSelectedBuilding(name)}
-                    className="bg-gray-300 border rounded p-3 mb-3 cursor-pointer">
-                        <p className="text-xl font-semibold mb-2">{name}</p>
-                        <p className="text-xs text-gray-500 mb-2">Rom: {rooms.length}</p>
+                    className="bg-slate-800 border border-slate-700 rounded-lg p-3 mb-3 cursor-pointer hover:bg-slate-700 transition duration-200">
+                        <p className="text-xl font-semibold mb-2 text-white">{name}</p>
+                        <p className="text-xs text-slate-400 mb-2">Rom: {rooms.length}</p>
                         <div className="flex gap-4 text-sm">
-                            <span className="flex items-center gap-1"> {greenCount} <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span> </span>
-                            <span className="flex items-center gap-1"> {yellowCount} <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span> </span>
-                            <span className="flex items-center gap-1"> {redCount} <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span> </span>
-                            <span className="flex items-center gap-1"> {sensorErrorCount} <FaExclamationTriangle className="text-yellow-500" /> </span>
+                            <span className="flex items-center gap-1 text-slate-200"> {greenCount} <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span> </span>
+                            <span className="flex items-center gap-1 text-slate-200"> {yellowCount} <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span> </span>
+                            <span className="flex items-center gap-1 text-slate-200"> {redCount} <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span> </span>
+                            <span className="flex items-center gap-1 text-slate-200"> {sensorErrorCount} <FaExclamationTriangle className="text-yellow-500" /> </span>
                         </div>
                     </div>
                 )    
             })}
             </div>
-            <div className="flex-1 border border-gray-300 rounded bg-white p-4">
+            <div className="flex-1 border border-slate-700 rounded-lg bg-slate-800 p-4">
             {selectedBuilding ? (
                 <div>
-                    <p className=" font-bold mb-4">{selectedBuilding}</p>
+                    <p className="font-bold mb-4 text-white">{selectedBuilding}</p>
                     <div className="grid grid-cols-3 gap-4">
                      {filteredData.filter(room => room.building === selectedBuilding).map(room => (
-                        <div key={room.id} onClick={() => setSelectedRoom(room)} className="bg-gray-200 border rounded p-3 cursor-pointer">
-                            <p className="text-sm font-semibold">{room.room}</p>
-                            <p className="text-xs text-gray-600 mb-2">{room.floor}</p>
-                            <p className="text-xs text-gray-600 mb-2">Sensor ID: {room.sensorId}</p>
-                            <p className="text-xs text-gray-600 mb-2">Status: {room.status}</p>
+                        <div key={room.id} onClick={() => setSelectedRoom(room)} className="bg-slate-700 border border-slate-600 rounded-lg p-3 cursor-pointer hover:bg-slate-600 transition duration-200">
+                            <p className="text-sm font-semibold text-white">{room.room}</p>
+                            <p className="text-xs text-slate-400 mb-2">{room.floor}</p>
+                            <p className="text-xs text-slate-400 mb-2">Sensor ID: {room.sensorId}</p>
+                            <p className="text-xs text-slate-400 mb-2">Status: {room.status}</p>
                             <div className="flex items-center justify-between">
-                                <span className= "text-sm font-medium"> {room.co2Value ?? "N/A"} </span>
+                                <span className= "text-sm font-medium text-slate-200"> {room.co2Value ?? "N/A"} </span>
                                 <StatusColor status={room.status} co2Value={room.co2Value} />
                             </div>
                         </div>
@@ -97,12 +97,12 @@ function Sensor({mockData, setActivePage}) {
                     </div>
                     {selectedRoom && (
                         <div className="mt-6">
-                            <p className="text-lg font-bold mb-2">Sensorlogg for {selectedRoom.room}</p>
-                            <div className="overflow-y-scroll max-h-72 border border-gray-300 rounded">
+                            <p className="text-lg font-bold mb-2 text-white">Sensorlogg for {selectedRoom.room}</p>
+                            <div className="overflow-y-scroll max-h-72 border border-slate-700 rounded-lg bg-slate-700">
                                 {sensorlog.map(reading => (
-                                    <div key={reading.id} className="flex items-center px-3 py-3 bg-gray-200">
-                                        <p className="w-52 font-bold">{reading.timestamp}</p>
-                                        <p className="flex-1 font-bold">{reading.ppm} ppm</p>
+                                    <div key={reading.id} className="flex items-center px-3 py-3 bg-slate-700 border-b border-slate-600">
+                                        <p className="w-52 font-bold text-slate-200">{reading.timestamp}</p>
+                                        <p className="flex-1 font-bold text-slate-200">{reading.ppm} ppm</p>
                                         <span className={`w-4 h-4 rounded-full ${reading.ppm > 1000 ? "bg-red-500" : reading.ppm > 600 ? "bg-yellow-400" : "bg-green-500"}`}>
 
                                         </span>
@@ -113,7 +113,7 @@ function Sensor({mockData, setActivePage}) {
                     )}
                 </div>
             ) : (
-                <p className=" text-gray-400">Velg en bygning for å se detaljer</p>    
+                <p className="text-slate-400">Velg en bygning for å se detaljer</p>    
             )}
      
      

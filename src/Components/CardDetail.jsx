@@ -33,34 +33,34 @@ function CardDetail({data}) {
 
 
   return (
-    <div className="bg-gray-300 border p-3 rounded-lg py-5 px-5">
-      <p><span className="font-bold">Adresse:</span> {data.address}</p>
-      <p><span className="font-bold">Rom:</span> {data.roomCode}</p>
-      <p><span className="font-bold">Etasje:</span> {data.floor}</p>
-      <p><span className="font-bold">Leietaker:</span> {tenantName}</p>
-      <p><span className="font-bold">Telefon:</span> {data.tenantPhone || 'Ikke tilgjengelig'}</p>
-      <p><span className="font-bold">E-post:</span> {data.tenantEmail || 'Ikke tilgjengelig'}</p>
-      <p><span className="font-bold">Rom areal:</span> {data.roomSize} m²</p>
-      <p><span className="font-bold">Sensor serienummer:</span> {data.sensorSerial || 'Ikke tilgjengelig'}</p>
-      <p><span className="font-bold">Sensor status:</span> {data.sensorStatus}</p>
+    <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg shadow-xl">
+      <p className="text-slate-100"><span className="font-bold text-white">Adresse:</span> {data.address}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Rom:</span> {data.roomCode}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Etasje:</span> {data.floor}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Leietaker:</span> {tenantName}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Telefon:</span> {data.tenantPhone || 'Ikke tilgjengelig'}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">E-post:</span> {data.tenantEmail || 'Ikke tilgjengelig'}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Rom areal:</span> {data.roomSize} m²</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Sensor serienummer:</span> {data.sensorSerial || 'Ikke tilgjengelig'}</p>
+      <p className="text-slate-100"><span className="font-bold text-white">Sensor status:</span> {data.sensorStatus}</p>
       
 
-       <div className="bg-white mt-6 p-3 rounded">
+       <div className="bg-slate-700 mt-6 p-4 rounded-lg border border-slate-600">
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="co2" stroke="red" dot={false} strokeWidth={2} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+            <XAxis dataKey="time" stroke="#cbd5e1" />
+            <YAxis stroke="#cbd5e1" />
+            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px', color: '#e2e8f0' }} />
+            <Line type="monotone" dataKey="co2" stroke="#ef4444" dot={false} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-sm text-gray-600 mt-1">Sist oppdatert: kl. 19.02</p>
-      <p className="font-bold mt-4">
-        <span className="cursor-pointer hover:underline">Kontakt leietaker</span>
+      <p className="text-sm text-slate-400 mt-1">Sist oppdatert: kl. 19.02</p>
+      <p className="font-bold mt-4 text-slate-100">
+        <span className="cursor-pointer hover:text-blue-400 hover:underline transition duration-200">Kontakt leietaker</span>
         {" | "}
-        <span className="cursor-pointer hover:underline">Slå av sensor</span>
+        <span className="cursor-pointer hover:text-blue-400 hover:underline transition duration-200">Slå av sensor</span>
       </p>
 
 

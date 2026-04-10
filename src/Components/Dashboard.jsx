@@ -91,7 +91,7 @@ function Dashboard() {
     if (error) return <p>{error}</p>;
 
     return (
-        <div className="bg-linear-to-br from-slate-50 to-blue-50 min-h-screen">
+        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen">
             <div>
                 
                 <Navbar />
@@ -99,8 +99,8 @@ function Dashboard() {
 
             <div className="flex gap-6 px-8 py-4">
                 <div className="w-105 p-4">
-                    <div className="mb-8 p-6 border border-gray-200 rounded-xl bg-white shadow-xl">
-                        <h3 className="font-bold text-xl mb-4 text-gray-800 border-b pb-2">
+                    <div className="mb-8 p-6 border border-slate-700 rounded-xl bg-slate-800 shadow-2xl">
+                        <h3 className="font-bold text-xl mb-4 text-white border-b border-slate-700 pb-2">
                             Velg Bygg
                         </h3>
                         <select
@@ -108,7 +108,7 @@ function Dashboard() {
                             onChange={(e) => {
                                 setSelectedBuilding(e.target.value);
                             }}
-                            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200"
+                            className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
                         >
                             <option value="">Velg et bygg</option>
                             {buildings.map((building) => (
@@ -120,22 +120,22 @@ function Dashboard() {
                     </div>
 
                     {selectedBuilding && (
-                        <div className="p-6 border border-gray-200 rounded-xl bg-white shadow-xl">
-                            <h3 className="font-bold text-xl mb-4 text-gray-800 border-b pb-2">
+                        <div className="p-6 border border-slate-700 rounded-xl bg-slate-800 shadow-2xl">
+                            <h3 className="font-bold text-xl mb-4 text-white border-b border-slate-700 pb-2">
                                 {selectedBuildingData?.name} - Rom
                             </h3>
 
                             <div className="space-y-3">
                                 {roomsLoading && (
-                                    <p className="text-gray-500">Laster rom...</p>
+                                    <p className="text-slate-400">Laster rom...</p>
                                 )}
 
                                 {roomsError && (
-                                    <p className="text-red-500">{roomsError}</p>
+                                    <p className="text-red-400">{roomsError}</p>
                                 )}
 
                                 {!roomsLoading && !roomsError && rooms.length === 0 && (
-                                    <p className="text-gray-500">Ingen rom funnet for dette bygget.</p>
+                                    <p className="text-slate-400">Ingen rom funnet for dette bygget.</p>
                                 )}
 
                                 {!roomsLoading && !roomsError && rooms.map((item, index) => (
@@ -144,27 +144,27 @@ function Dashboard() {
                                         onClick={() => handleRoomClick(item.id)}
                                         className={`w-full text-left p-4 rounded-lg border transition duration-200 ${
                                             selectedCard?.roomId === item.id
-                                                ? 'bg-blue-100 border-blue-400'
-                                                : 'bg-gray-50 border-gray-200 hover:bg-blue-50'
+                                                ? 'bg-blue-600 border-blue-500 text-white'
+                                                : 'bg-slate-700 border-slate-600 text-slate-100 hover:bg-slate-600'
                                         }`}
                                     >
-                                        <div className="font-semibold text-gray-800">
+                                        <div className="font-semibold">
                                             Rom {item.roomCode}
                                         </div>
 
-                                        <div className="text-sm text-gray-600">
+                                        <div className="text-sm text-slate-300">
                                             Etg. {item.roomFloor}
                                         </div>
 
                                         <div className="text-sm mt-1">
                                             {item.status === 'Farlig Co2 Nivå!' && (
-                                                <span className="text-red-600 font-medium">{item.status}</span>
+                                                <span className="text-red-400 font-medium">{item.status}</span>
                                             )}
                                             {item.status === 'Normalt Co2 Nivå' && (
-                                                <span className="text-green-600 font-medium">{item.status}</span>
+                                                <span className="text-green-400 font-medium">{item.status}</span>
                                             )}
                                             {item.status === 'Feil med sensor' && (
-                                                <span className="text-yellow-600 font-medium">{item.status}</span>
+                                                <span className="text-yellow-400 font-medium">{item.status}</span>
                                             )}
                                         </div>
                                     </button>
@@ -177,20 +177,20 @@ function Dashboard() {
                 <div className="flex-1 p-6">
                     {cardLoading ? (
                         <div className="text-center py-12">
-                            <p className="text-gray-500 text-lg">
+                            <p className="text-slate-400 text-lg">
                                 Laster romdetaljer...
                             </p>
                             <div className="mt-4 text-6xl opacity-20">🏢</div>
                         </div>
                     ) : cardError ? (
                         <div className="text-center py-12">
-                            <p className="text-red-500 text-lg">{cardError}</p>
+                            <p className="text-red-400 text-lg">{cardError}</p>
                         </div>
                     ) : selectedCard ? (
                         <CardDetail data={selectedCard} />
                     ) : (
                         <div className="text-center py-12">
-                            <p className="text-gray-500 text-lg">
+                            <p className="text-slate-400 text-lg">
                                 Velg et rom fra listen for å se detaljer
                             </p>
                             <div className="mt-4 text-6xl opacity-20">🏢</div>
