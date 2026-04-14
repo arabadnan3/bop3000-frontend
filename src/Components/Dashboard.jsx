@@ -74,8 +74,34 @@ function Dashboard() {
             setCardError('');
 
             const roomDetails = await api.getRoomDetails(roomId);
+            const sensors = await api.getSensorsFromRoom(roomId);
+
+            const sensorsWithLatestReading = await Promise.all(
+                sensors.map(async (sensor) => {
+                    try {
+                        const latestReading = await api.getLatestReading(sensor.id);
+
+                        return {
+                            ...sensor,
+                            latestReading
+                        };
+                    } catch (err) {
+                        console.error(`Failed to load latest reading for sensor ${sensor.id}`, err);
+
+                        return {
+                            ...sensor,
+                            latestReading: null
+                        };
+                    }
+                })
+            );
+
             console.log('Room details response:', roomDetails);
-            setSelectedCard(roomDetails);
+
+            setSelectedCard({
+                ...roomDetails,
+                sensors: sensorsWithLatestReading
+            });
         } catch (err) {
             setCardError('Failed to load room details');
             console.error(err);
@@ -93,7 +119,7 @@ function Dashboard() {
 
     return (
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-                <Navbar />
+            <Navbar />
             <div className="flex gap-6 px-8 py-4">
                 <div className="w-[420px] p-4">
                     <div className="mb-8 p-6 border border-gray-200 rounded-xl bg-white shadow-xl">

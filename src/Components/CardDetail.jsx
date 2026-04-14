@@ -26,16 +26,18 @@ function CardDetail({ data }) {
             : 'Ingen leietaker';
 
     const formatSensorStatus = (status) => {
-        if (status === 'TRUE') return 'ON';
-        if (status === 'FALSE') return 'OFF';
+        const normalizedStatus = String(status).trim().toUpperCase();
+
+        if (normalizedStatus === 'TRUE') return 'Aktiv';
+        if (normalizedStatus === 'FALSE') return 'Inaktiv';
         return 'Ikke tilgjengelig';
     };
 
     return (
         <div className="bg-gray-300 border p-3 rounded-lg py-5 px-5">
             <p><span className="font-bold">Adresse:</span> {data.address}</p>
-            <p><span className="font-bold">Rom nummer:</span> {data.roomCode}</p>
-            <p><span className="font-bold">Etasje:</span> {data.floor}</p>
+            <p><span className="font-bold">Romnr:</span> {data.roomCode}</p>
+            <p><span className="font-bold">Etasje:</span> {data.floor}. etg</p>
             <p><span className="font-bold">Leietaker:</span> {tenantName}</p>
             <p><span className="font-bold">Telefon:</span> {data.tenantPhone || 'Ikke tilgjengelig'}</p>
             <p><span className="font-bold">E-post:</span> {data.tenantEmail || 'Ikke tilgjengelig'}</p>
@@ -58,6 +60,10 @@ function CardDetail({ data }) {
                                 <span className="font-bold">Sensor status:</span>{' '}
                                 {formatSensorStatus(sensor.sensorStatus)}
                             </p>
+                            <p>
+                                <span className='font-bold'>Sensor måling:</span>{' '}
+                                {sensor.latestReading?.value ?? 'Ikke tilgjengelig'}
+                            </p>
 
                             <div className="mt-4">
                                 <ResponsiveContainer width="100%" height={200}>
@@ -78,7 +84,7 @@ function CardDetail({ data }) {
                             </div>
 
                             <p className="text-sm text-gray-600 mt-2">
-                                Sist oppdatert: kl. 19.02
+                                Sist oppdatert: {sensor.latestReading?.timeStamp || 'Ikke tilgjengelig'}
                             </p>
                         </div>
                     ))
@@ -88,8 +94,6 @@ function CardDetail({ data }) {
             </div>
 
             <p className="font-bold mt-4">
-                <span className="cursor-pointer hover:underline">Kontakt leietaker</span>
-                {" | "}
                 <span className="cursor-pointer hover:underline">Slå av sensor</span>
             </p>
         </div>

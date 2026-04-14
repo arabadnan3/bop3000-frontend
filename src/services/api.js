@@ -41,8 +41,28 @@ export const api = {
         return response.json();
     },
 
+    getSensorsFromRoom: async (roomId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/rooms/${roomId}`);
+        return response.json();
+    },
+
+    getSensorsFromBuilding: async (buildingId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/buildings/${buildingId}`);
+        return response.json();
+    },
+
+    getSensorDetails: async (roomId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/${roomId}`);
+        return response.json();
+    },
+
     getSensorReadings: async () => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings`);
+        return response.json();
+    },
+
+    getLatestReading: async (sensorId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings/latest/${sensorId}`);
         return response.json();
     },
 
