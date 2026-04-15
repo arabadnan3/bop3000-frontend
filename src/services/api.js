@@ -75,4 +75,20 @@ export const api = {
         const response = await fetch(`${API_BASE_URL}/sensor_rules`);
         return response.json();
     },
+
+    createBuilding: async (buildingData) => {
+        const response = await fetch(`${API_BASE_URL}/buildings`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(buildingData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to create building");
+        }
+
+        return await response.json();
+    }
 };

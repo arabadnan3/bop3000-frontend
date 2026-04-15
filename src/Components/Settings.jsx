@@ -1,4 +1,5 @@
 import React , {useState} from 'react'
+import { api } from "../services/api";
 import Navbar from './Navbar';
 
 
@@ -9,6 +10,53 @@ function Settings({buildingData, mockData }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isBuildingEditing, setIsBuildingEditing] = useState(false);
     const [sensorMode, setSensorMode] = useState(null);
+
+    const [newBuilding, setNewBuilding] = useState({
+        name: "",
+        streetName: "",
+        streetNumber: "",
+        zipCode: "",
+        city: "",
+        floorCount: 1,
+        roomCount: 1,
+        roomSize: 1
+    });
+
+    const handleBuildingChange = (e) => {
+        const { name, value, type } = e.target;
+
+        setNewBuilding((prev) => ({
+            ...prev,
+            [name]: type === "number" ? Number(value) : value
+        }));
+    };
+
+    const handleCreateBuilding = async (e) => {
+        e.preventDefault();
+
+        try {
+            const createdBuilding = await api.createBuilding(newBuilding);
+            console.log("Bygning opprettet:", createdBuilding);
+
+            alert("Bygning lagt til!");
+
+            setNewBuilding({
+                name: "",
+                streetName: "",
+                streetNumber: "",
+                zipCode: "",
+                city: "",
+                floorCount: 1,
+                roomCount: 1,
+                roomSize: 1
+            });
+
+            setSelectedBuilding(null);
+        } catch (error) {
+            console.error("Feil ved opprettelse av bygning:", error);
+            alert("Kunne ikke opprette bygning");
+        }
+    };
 
     return (
         <div className="bg-gray-100 min-h-screen">
@@ -94,34 +142,103 @@ function Settings({buildingData, mockData }) {
 
                             {/*Building form*/}
                             {selectedBuilding === "ny" && (
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                }}>
+                                <form onSubmit={handleCreateBuilding}>
                                     <div className="flex flex-col gap-4">
                                         <p className="text-lg font-bold"> Legg til bygning </p>
 
                                         <div className="flex items-center gap-2">
                                             <label className="w-36 text-right font-bold">Bygning navn:</label>
-                                            <input type="text" placeholder="Bygning navn" className="p-2 border rounded bg-white w-64" />
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                value={newBuilding.name}
+                                                onChange={handleBuildingChange}
+                                                placeholder="Hovedbygg A"
+                                                className="p-2 border rounded bg-white w-64"
+                                            />
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Adresse:</label>
-                                            <input type="text" placeholder="Adresse" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold">Adresse navn:</label>
+                                            <input
+                                                type="text"
+                                                name="streetName"
+                                                value={newBuilding.streetName}
+                                                onChange={handleBuildingChange}
+                                                placeholder="Byggveien"
+                                                className="p-2 border rounded bg-white w-64" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">Postnummer:</label>
-                                            <input type="text" placeholder="Postnummer" className="p-2 border rounded bg-white w-64" />
+                                            <label className="w-36 text-right font-bold">Adresse nummer:</label>
+                                            <input type="number"
+                                                   name="streetNumber"
+                                                   value={newBuilding.streetNumber}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="28"
+                                                   min={1}
+                                                   className="p-2 border rounded bg-white w-64" />
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <label className="w-36 text-right font-bold">Postnr:</label>
+                                            <input type="text"
+                                                   name="zipCode"
+                                                   value={newBuilding.zipCode}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="0965"
+                                                   className="p-2 border rounded bg-white w-64" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
                                             <label className="w-36 text-right font-bold">Poststed:</label>
-                                            <input type="text" placeholder="Poststed" className="p-2 border rounded bg-white w-64" />
+                                            <input type="text"
+                                                   name="city"
+                                                   value={newBuilding.city}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="Oslo"
+                                                   className="p-2 border rounded bg-white w-64" />
                                         </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <label className="w-36 text-right font-bold">Antall etasjer:</label>
+                                            <input type="number"
+                                                   name="floorCount"
+                                                   value={newBuilding.floorCount}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="3"
+                                                   min={1}
+                                                   max={20}
+                                                   className="p-2 border rounded bg-white w-64" />
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <label className="w-36 text-right font-bold">Rom pr etasje:</label>
+                                            <input type="number"
+                                                   name="roomCount"
+                                                   value={newBuilding.roomCount}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="3"
+                                                   min={1}
+                                                   max={20}
+                                                   className="p-2 border rounded bg-white w-64" />
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <label className="w-36 text-right font-bold">Rom størrelse:</label>
+                                            <input type="number"
+                                                   name="roomSize"
+                                                   value={newBuilding.roomSize}
+                                                   onChange={handleBuildingChange}
+                                                   placeholder="40"
+                                                   min={1}
+                                                   max={200}
+                                                   className="p-2 border rounded bg-white w-64" />
+                                        </div>
+
                                     </div>
 
-                                    <button type="submit" className="py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
+                                    <button type="submit" className="mt-20 py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
                                         Legg til
                                     </button>
                                 </form>
