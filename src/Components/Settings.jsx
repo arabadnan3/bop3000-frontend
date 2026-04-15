@@ -1,15 +1,47 @@
-import React , {useState} from 'react'
-import { api } from "../services/api";
+import React, {useEffect, useState} from 'react'
+import {api} from "../services/api";
 import Navbar from './Navbar';
 
 
 function Settings({buildingData, mockData }) {
-    const [activeTab, setActiveTab] = useState("");
-    const[selectedBuilding, setSelectedBuilding] = useState(null);
+    const [activeTab, setActiveTab] = useState("bygning");
+    const [loading, setLoading] = useState(true);
+    const [buildings, setBuildings] = useState([]);
+    const [error, setError] = useState('');
+    const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [selectedSensor, setSelectedSensor] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isBuildingEditing, setIsBuildingEditing] = useState(false);
     const [sensorMode, setSensorMode] = useState(null);
+
+    const fetchBuildings = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const data = await api.getBuildings();
+
+            const mappedBuildings = data.map((building) => ({
+                id: building.id,
+                name: building.name,
+                streetName: building.streetName,
+                streetNumber: building.streetNumber,
+                zipCode: building.zipCode,
+                city: building.city
+            }));
+
+            setBuildings(mappedBuildings);
+        } catch (err) {
+            setError("Failed to load buildings");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchBuildings();
+    }, []);
 
     const [newBuilding, setNewBuilding] = useState({
         name: "",
@@ -37,6 +69,8 @@ function Settings({buildingData, mockData }) {
         try {
             const createdBuilding = await api.createBuilding(newBuilding);
             console.log("Bygning opprettet:", createdBuilding);
+
+            await fetchBuildings();
 
             alert("Bygning lagt til!");
 
@@ -108,22 +142,31 @@ function Settings({buildingData, mockData }) {
                                 + Legg til bygning
                             </button>
 
+                            {loading && <p className="text-sm text-gray-500">Laster bygninger...</p>}
+                            {error && <p className="text-sm text-red-500">{error}</p>}
+
+                            {!loading && !error && buildings.length === 0 && (
+                                <p className="text-sm text-gray-500">Ingen bygninger funnet.</p>
+                            )}
+
                             <div className="overflow-y-auto max-h-[70vh] flex flex-col gap-2 mt-1 ">
-                                {buildingData.map(building => (
+                                {!loading && buildings.map(building => (
                                     <div
                                         key={building.id}
-                                        onClick={() => {setSelectedBuilding(building); setIsBuildingEditing(false); }}
+                                        onClick={() => {
+                                            setSelectedBuilding(building);
+                                            setIsBuildingEditing(false);
+                                        }}
                                         className={`border rounded p-3 cursor-pointer ${
                                             selectedBuilding?.id === building.id
-                                                ? "bg-gray-300 border black"
+                                                ? "bg-gray-300 border-black"
                                                 : "bg-gray-200 border-gray-300"
                                         }`}
                                     >
-                                        <p className="text-base font-semibold ">{building.name}</p>
-                                        <p className="text-sm text-gray-500 ">{building.address}</p>
-                                        <p className="text-sm text-gray-500">{building.postnummer} {building.poststed}</p>
+                                        <p className="text-base font-semibold">{building.name}</p>
+                                        <p className="text-sm text-gray-500">{building.streetName} {building.streetNumber}</p>
+                                        <p className="text-sm text-gray-500">{building.zipCode} {building.city}</p>
                                     </div>
-
                                 ))}
                             </div>
 
@@ -171,12 +214,11 @@ function Settings({buildingData, mockData }) {
 
                                         <div className="flex items-center gap-2">
                                             <label className="w-36 text-right font-bold">Adresse nummer:</label>
-                                            <input type="number"
+                                            <input type="text"
                                                    name="streetNumber"
                                                    value={newBuilding.streetNumber}
                                                    onChange={handleBuildingChange}
                                                    placeholder="28"
-                                                   min={1}
                                                    className="p-2 border rounded bg-white w-64" />
                                         </div>
 
@@ -299,19 +341,17 @@ function Settings({buildingData, mockData }) {
                                     <p className="text-lg font-bold">{selectedBuilding.name}</p>
 
                                     {[
-                                        { label: "Adresse", value: selectedBuilding.address },
-                                        { label: "Postnummer", value: selectedBuilding.postnummer },
-                                        { label: "Poststed", value: selectedBuilding.poststed },
+                                        { label: "Adresse", value: `${selectedBuilding.streetName} ${selectedBuilding.streetNumber}` },
+                                        { label: "Postnummer", value: selectedBuilding.zipCode },
+                                        { label: "Poststed", value: selectedBuilding.city },
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center gap-2">
                                             <label className="w-36 text-right font-bold">{label}:</label>
                                             <input
                                                 type="text"
-                                                defaultValue={value}
-                                                readOnly={!isBuildingEditing}
-                                                className={`p-2 border rounded w-64 ${
-                                                    isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
-                                                }`}
+                                                value={value}
+                                                readOnly
+                                                className="p-2 border rounded w-64 bg-gray-100"
                                             />
                                         </div>
                                     ))}
@@ -363,15 +403,17 @@ function Settings({buildingData, mockData }) {
                                 <label className="text-xs text-gray-500 font-semibold">Bygg</label>
                                 <select
                                     className="w-full bg-transparent font-semibold mt-1 cursor-pointer outline-none"
-                                    onChange={e => {
-                                        setSelectedBuilding(buildingData.find(b => b.id === Number(e.target.value)) || null);
+                                    onChange={(e) => {
+                                        setSelectedBuilding(buildings.find(b => b.id === Number(e.target.value)) || null);
                                         setSelectedSensor(null);
                                     }}
                                     value={selectedBuilding?.id || ""}
                                 >
                                     <option value="">Alle bygninger</option>
-                                    {buildingData.map(b => (
-                                        <option key={b.id} value={b.id}>{b.name} — {b.address}</option>
+                                    {buildings.map(b => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name} — {b.streetName} {b.streetNumber}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -422,7 +464,7 @@ function Settings({buildingData, mockData }) {
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
                                         <input
                                             type="text"
-                                            defaultValue={`SN-C02-${selectedSensor.sensorId}`}
+                                            value={`SN-C02-${selectedSensor.sensorId}`}
                                             readOnly={!isEditing}
                                             className={`p-2 border rounded w-64 ${
                                                 isEditing ? "bg-white border-black" : "bg-gray-100"
@@ -440,7 +482,7 @@ function Settings({buildingData, mockData }) {
                                                 <option value="Bevegelse">Bevegelse</option>
                                             </select>
                                         ) : (
-                                            <input type="text" defaultValue="CO2" readOnly className="p-2 border rounded w-64 bg-gray-100" />
+                                            <input type="text" value="CO2" readOnly className="p-2 border rounded w-64 bg-gray-100" />
                                         )}
                                     </div>
 
@@ -455,7 +497,7 @@ function Settings({buildingData, mockData }) {
                                                 }
                                             </select>
                                         ) : (
-                                            <input type="text" defaultValue={selectedSensor.building} readOnly className="p-2 border rounded w-64 bg-gray-100" />
+                                            <input type="text" value={selectedSensor.building} readOnly className="p-2 border rounded w-64 bg-gray-100" />
                                         )}
                                     </div>
 
@@ -470,7 +512,7 @@ function Settings({buildingData, mockData }) {
                                                 }
                                             </select>
                                         ) : (
-                                            <input type="text" defaultValue={selectedSensor.floor} readOnly className="p-2 border rounded w-64 bg-gray-100" />
+                                            <input type="text" value={selectedSensor.floor} readOnly className="p-2 border rounded w-64 bg-gray-100" />
                                         )}
                                     </div>
 
@@ -485,7 +527,7 @@ function Settings({buildingData, mockData }) {
                                                 }
                                             </select>
                                         ) : (
-                                            <input type="text" defaultValue={selectedSensor.room} readOnly className="p-2 border rounded w-64 bg-gray-100" />
+                                            <input type="text" value={selectedSensor.room} readOnly className="p-2 border rounded w-64 bg-gray-100" />
                                         )}
                                     </div>
 
@@ -507,7 +549,7 @@ function Settings({buildingData, mockData }) {
                                                         <label className="text-sm font-semibold">Choose threshold:</label>
                                                         <input
                                                             type="number"
-                                                            defaultValue={i === 1 ? 800 : 600}
+                                                            value={i === 1 ? 800 : 600}
                                                             readOnly={!isEditing}
                                                             className={`p-1 border rounded w-24 text-sm ${
                                                                 isEditing ? "bg-white" : "bg-gray-100"
@@ -587,7 +629,7 @@ function Settings({buildingData, mockData }) {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
-                                        <input type="text" placeholder="Sensor serienr" className="p-2 border rounded bg-white w-64" />
+                                        <input type="text" placeholder="SN-C02-001" className="p-2 border rounded bg-white w-64" />
                                     </div>
 
                                     {/* Sensor type dropdown */}
@@ -643,7 +685,7 @@ function Settings({buildingData, mockData }) {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose threshold:</label>
-                                                        <input type="number" placeholder="F.eks. 800" className="p-1 border rounded bg-white w-24 text-sm" />
+                                                        <input type="number" placeholder="800" className="p-1 border rounded bg-white w-24 text-sm" />
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
