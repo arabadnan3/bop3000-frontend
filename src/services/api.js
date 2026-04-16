@@ -90,5 +90,32 @@ export const api = {
         }
 
         return await response.json();
+    },
+
+     createSensor: async (sensorData) => {
+        const response = await fetch(`${API_BASE_URL}/sensors`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(sensorData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to create sensor: ${errorText}`);
+        }
+
+        return await response.json();
+    },
+
+    getSensorsAndDetails: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensors/buildings/details`);
+        return response.json();
+    },
+
+    getSensorDetailsByBuilding: async (buildingId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/buildings/details/${buildingId}`);
+        return response.json();
     }
 };
