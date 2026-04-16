@@ -3,21 +3,28 @@ import {api} from "../services/api";
 import Navbar from './Navbar';
 
 
-function Settings({buildingData, mockData }) {
+function Settings() {
     const [activeTab, setActiveTab] = useState("bygning");
-    const [loading, setLoading] = useState(true);
+    const [buildingLoading, setBuildingLoading] = useState(false);
+    const [sensorLoading, setSensorLoading] = useState(false);
+    const [buildingError, setBuildingError] = useState("");
+    const [sensorError, setSensorError] = useState("");
     const [buildings, setBuildings] = useState([]);
+    const [sensors, setSensors] = useState([]);
     const [error, setError] = useState('');
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [selectedSensor, setSelectedSensor] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isBuildingEditing, setIsBuildingEditing] = useState(false);
     const [sensorMode, setSensorMode] = useState(null);
+    const [selectedSensorBuildingId, setSelectedSensorBuildingId] = useState("");
+    const [selectedSensorFloor, setSelectedSensorFloor] = useState("");
+    const [roomsForSelectedBuilding, setRoomsForSelectedBuilding] = useState([]);
 
     const fetchBuildings = async () => {
         try {
-            setLoading(true);
-            setError("");
+            setBuildingLoading(true);
+            setBuildingError("");
 
             const data = await api.getBuildings();
 
@@ -32,15 +39,67 @@ function Settings({buildingData, mockData }) {
 
             setBuildings(mappedBuildings);
         } catch (err) {
-            setError("Failed to load buildings");
+            setBuildingError("Failed to load buildings");
             console.error(err);
         } finally {
-            setLoading(false);
+            setBuildingLoading(false);
+        }
+    };
+
+    const fetchSensors = async (buildingId = null) => {
+        try {
+            setSensorLoading(true);
+            setSensorError("");
+
+            const data = buildingId
+                ? await api.getSensorDetailsByBuilding(buildingId)
+                : await api.getSensorsAndDetails();
+
+            const mappedSensors = data.map((sensor) => ({
+                id: sensor.id,
+                roomId: sensor.roomId,
+                roomCode: sensor.roomCode,
+                roomFloor: sensor.roomFloor,
+                buildingName: sensor.buildingName,
+                address: `${sensor.streetName} ${sensor.streetNumber}`,
+                sensorSerial: sensor.sensorSerial,
+                sensorType: sensor.sensorType,
+                sensorBattery: sensor.sensorBattery,
+                sensorStatus: sensor.sensorStatus,
+                sensorRules: sensor.sensorRules
+            }));
+
+            setSensors(mappedSensors);
+            console.log(mappedSensors);
+        } catch (err) {
+            setSensorError("Failed to load sensors");
+            console.error(err);
+            setSensors([]);
+        } finally {
+            setSensorLoading(false);
+        }
+    };
+
+    const fetchRoomsForBuilding = async (buildingId) => {
+        try {
+            const data = await api.getRoomsFromBuilding(buildingId);
+
+            const mappedRooms = data.map((room) => ({
+                id: room.id,
+                roomCode: room.roomCode,
+                floor: room.roomFloor
+            }));
+
+            setRoomsForSelectedBuilding(mappedRooms);
+        } catch (err) {
+            console.error("Failed to load rooms for building", err);
+            setRoomsForSelectedBuilding([]);
         }
     };
 
     useEffect(() => {
         fetchBuildings();
+        fetchSensors();
     }, []);
 
     const [newBuilding, setNewBuilding] = useState({
@@ -53,6 +112,56 @@ function Settings({buildingData, mockData }) {
         roomCount: 1,
         roomSize: 1
     });
+
+    const [newSensor, setNewSensor] = useState({
+        sensorSerial: "",
+        sensorType: "",
+        roomId: "",
+        sensorRules: [
+            {
+                ruleOperator: "GREATER_THAN",
+                ruleThreshold: 0,
+                ruleSeverity: "WARNING",
+                active: true
+            },
+            {
+                ruleOperator: "GREATER_THAN",
+                ruleThreshold: 0,
+                ruleSeverity: "CRITICAL",
+                active: true
+            }
+        ]
+    });
+
+    const RULE_OPERATOR_LABELS = {
+        GREATER_THAN: ">",
+        LESS_THAN: "<",
+        EQUALS: "=",
+        GREATER_OR_EQUAL: ">=",
+        LESS_OR_EQUAL: "<="
+    };
+
+    const handleSensorChange = (e) => {
+        const { name, value } = e.target;
+        setNewSensor((prev) => ({
+            ...prev,
+            [name]: name === "roomId" ? Number(value) : value
+        }));
+    };
+
+    const handleRuleChange = (index, field, value) => {
+        setNewSensor((prev) => ({
+            ...prev,
+            sensorRules: prev.sensorRules.map((rule, i) =>
+                i === index
+                    ? {
+                        ...rule,
+                        [field]: field === "ruleThreshold" ? Number(value) : value
+                    }
+                    : rule
+            )
+        }));
+    };
 
     const handleBuildingChange = (e) => {
         const { name, value, type } = e.target;
@@ -91,6 +200,52 @@ function Settings({buildingData, mockData }) {
             alert("Kunne ikke opprette bygning");
         }
     };
+
+    const handleCreateSensor = async (e) => {
+        e.preventDefault();
+
+        try {
+            await api.createSensor(newSensor);
+
+            alert("Sensor lagt til!");
+
+            setNewSensor({
+                sensorSerial: "",
+                sensorType: "",
+                roomId: "",
+                sensorRules: [
+                    {
+                        ruleOperator: "GREATER_THAN",
+                        ruleThreshold: 0,
+                        ruleSeverity: "WARNING",
+                        active: true
+                    },
+                    {
+                        ruleOperator: "GREATER_THAN",
+                        ruleThreshold: 0,
+                        ruleSeverity: "CRITICAL",
+                        active: true
+                    }
+                ]
+            });
+
+            setSelectedSensorBuildingId("");
+            setSelectedSensorFloor("");
+            setRoomsForSelectedBuilding([]);
+            setSelectedSensor(null);
+
+            await fetchSensors(selectedBuilding?.id || null);
+        } catch (error) {
+            console.error("Feil ved opprettelse av sensor:", error);
+            alert("Kunne ikke opprette sensor");
+        }
+    };
+
+    const availableFloors = [...new Set(roomsForSelectedBuilding.map(room => room.floor))].sort((a, b) => a - b);
+
+    const filteredRooms = roomsForSelectedBuilding.filter(
+        (room) => String(room.floor) === String(selectedSensorFloor)
+    );
 
     return (
         <div className="bg-gray-100 min-h-screen">
@@ -142,15 +297,15 @@ function Settings({buildingData, mockData }) {
                                 + Legg til bygning
                             </button>
 
-                            {loading && <p className="text-sm text-gray-500">Laster bygninger...</p>}
+                            {buildingLoading && <p className="text-sm text-gray-500">Laster bygninger...</p>}
                             {error && <p className="text-sm text-red-500">{error}</p>}
 
-                            {!loading && !error && buildings.length === 0 && (
+                            {!buildingLoading && !error && buildings.length === 0 && (
                                 <p className="text-sm text-gray-500">Ingen bygninger funnet.</p>
                             )}
 
                             <div className="overflow-y-auto max-h-[70vh] flex flex-col gap-2 mt-1 ">
-                                {!loading && buildings.map(building => (
+                                {!buildingLoading && buildings.map(building => (
                                     <div
                                         key={building.id}
                                         onClick={() => {
@@ -303,7 +458,7 @@ function Settings({buildingData, mockData }) {
                                             <label className="w-36 text-right font-bold">Bygning:</label>
                                             <select className="p-2 border rounded bg-white w-64 cursor-pointer" required>
                                                 <option value="">Velg bygning</option>
-                                                {buildingData.map(b => (
+                                                {buildings.map(b => (
                                                     <option key={b.id} value={b.id}>{b.name}</option>
                                                 ))}
                                             </select>
@@ -336,6 +491,10 @@ function Settings({buildingData, mockData }) {
 
                             {/* SelectedBuilding details */}
 
+                            {/* =========================
+   BUILDING DETAILS SECTION
+   ========================= */}
+
                             {selectedBuilding && selectedBuilding !== "ny" && selectedBuilding !== "ny-rom" && (
                                 <div key={selectedBuilding.id} className="flex flex-col gap-4">
                                     <p className="text-lg font-bold">{selectedBuilding.name}</p>
@@ -347,6 +506,11 @@ function Settings({buildingData, mockData }) {
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center gap-2">
                                             <label className="w-36 text-right font-bold">{label}:</label>
+
+                                            {/* READ-ONLY BUILDING INPUT
+                                               These fields are display-only right now.
+                                               Even if isBuildingEditing is true, these are still not editable
+                                               because readOnly is always set and there is no onChange handler. */}
                                             <input
                                                 type="text"
                                                 value={value}
@@ -357,6 +521,9 @@ function Settings({buildingData, mockData }) {
                                     ))}
 
                                     <div className="flex flex-col gap-2 mt-2">
+                                        {/* BUILDING EDIT TOGGLE BUTTON
+                                         This only changes the button state/text right now.
+                                         It does NOT make the building inputs editable yet. */}
                                         <button
                                             onClick={() => setIsBuildingEditing(prev => !prev)}
                                             className={`w-64 py-2 px-4 font-semibold rounded cursor-pointer border text-left ${
@@ -368,6 +535,8 @@ function Settings({buildingData, mockData }) {
                                             {isBuildingEditing ? "Lagre endringer" : "Endre bygninginformasjon"}
                                         </button>
 
+                                        {/* BUILDING CANCEL BUTTON
+                                        Only visible when isBuildingEditing === true */}
                                         {isBuildingEditing && (
                                             <button
                                                 onClick={() => setIsBuildingEditing(false)}
@@ -403,9 +572,20 @@ function Settings({buildingData, mockData }) {
                                 <label className="text-xs text-gray-500 font-semibold">Bygg</label>
                                 <select
                                     className="w-full bg-transparent font-semibold mt-1 cursor-pointer outline-none"
-                                    onChange={(e) => {
-                                        setSelectedBuilding(buildings.find(b => b.id === Number(e.target.value)) || null);
+                                    onChange={async (e) => {
+                                        const buildingId = e.target.value;
+
+                                        if (!buildingId) {
+                                            setSelectedBuilding(null);
+                                            setSelectedSensor(null);
+                                            await fetchSensors();
+                                            return;
+                                        }
+
+                                        const building = buildings.find(b => b.id === Number(buildingId)) || null;
+                                        setSelectedBuilding(building);
                                         setSelectedSensor(null);
+                                        await fetchSensors(Number(buildingId));
                                     }}
                                     value={selectedBuilding?.id || ""}
                                 >
@@ -421,28 +601,37 @@ function Settings({buildingData, mockData }) {
                             {/*list*/}
 
                             <div className="overflow-y-auto max-h-[65vh] flex flex-col gap-2 mt-1">
-                                {mockData
-                                    .filter(s => selectedBuilding ? s.building.startsWith(selectedBuilding.name) : true)
-                                    .map(sensor => (
-                                        <div
-                                            key={sensor.sensorId}
-                                            onClick={() => { setSelectedSensor(sensor); setIsEditing(false); }}
-                                            className={`border rounded p-3 cursor-pointer flex justify-between items-center ${
-                                                selectedSensor?.sensorId === sensor.sensorId
-                                                    ? "bg-gray-400 border-black"
-                                                    : "bg-gray-200 border-gray-300"
-                                            }`}
-                                        >
-                                            <div>
-                                                <p className="font-bold text-sm">SN-C02-{sensor.sensorId}</p>
-                                                <p className="text-xs text-gray-600">{sensor.building} | {sensor.room}</p>
-                                            </div>
-                                            <div className={`w-4 h-4 rounded-full ${
-                                                sensor.status === "Normalt Co2 Nivå" ? "bg-green-500" : "bg-red-500"
-                                            }`} />
+                                {sensorLoading && <p className="text-sm text-gray-500">Laster sensorer...</p>}
+                                {sensorError && <p className="text-sm text-red-500">{sensorError}</p>}
+
+                                {!sensorLoading && !sensorError && sensors.length === 0 && (
+                                    <p className="text-sm text-gray-500">Ingen sensorer funnet.</p>
+                                )}
+
+                                {!sensorLoading && sensors.map(sensor => (
+                                    <div
+                                        key={sensor.id}
+                                        onClick={() => {
+                                            setSelectedSensor(sensor);
+                                            setIsEditing(false);
+                                        }}
+                                        className={`border rounded p-3 cursor-pointer flex justify-between items-center ${
+                                            selectedSensor?.id === sensor.id
+                                                ? "bg-gray-400 border-black"
+                                                : "bg-gray-200 border-gray-300"
+                                        }`}
+                                    >
+                                        <div>
+                                            <p className="font-bold text-sm">{sensor.sensorSerial}</p>
+                                            <p className="text-xs text-gray-600">
+                                                {sensor.buildingName} ({sensor.address}) | Rom {sensor.roomCode}
+                                            </p>
                                         </div>
-                                    ))
-                                }
+                                        <div className={`w-4 h-4 rounded-full ${
+                                            sensor.sensorStatus ? "bg-green-500" : "bg-red-500"
+                                        }`} />
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
@@ -458,13 +647,22 @@ function Settings({buildingData, mockData }) {
 
                             {/*Selected sensor details*/}
 
+                            {/* =========================
+                               SENSOR DETAILS SECTION
+                               ========================= */}
+
                             {selectedSensor && selectedSensor !== "ny" && (
-                                <div key={selectedSensor.sensorId} className="flex flex-col gap-4 mt-6 px-4">
+                                <div key={selectedSensor.id} className="flex flex-col gap-4 mt-6 px-4">
+
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
+
+                                        {/* SENSOR SERIAL INPUT
+                                           Editable when isEditing === true
+                                           Read-only when isEditing === false */}
                                         <input
                                             type="text"
-                                            value={`SN-C02-${selectedSensor.sensorId}`}
+                                            value={selectedSensor.sensorSerial}
                                             readOnly={!isEditing}
                                             className={`p-2 border rounded w-64 ${
                                                 isEditing ? "bg-white border-black" : "bg-gray-100"
@@ -474,84 +672,100 @@ function Settings({buildingData, mockData }) {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor type:</label>
+
+                                        {/* SENSOR TYPE FIELD
+                                           EDIT MODE: show dropdown
+                                           READ-ONLY MODE: show plain input */}
                                         {isEditing ? (
-                                            <select className="p-2 border border-black rounded bg-white w-64 cursor-pointer">
+                                            <select
+                                                value={selectedSensor.sensorType}
+                                                className="p-2 border border-black rounded bg-white w-64 cursor-pointer"
+                                            >
                                                 <option value="CO2">CO2</option>
-                                                <option value="Temperatur">Temperatur</option>
-                                                <option value="Luftfuktighet">Luftfuktighet</option>
-                                                <option value="Bevegelse">Bevegelse</option>
+                                                <option value="TEMPERATUR">Temperatur</option>
+                                                <option value="LUFTFUKTIGHET">Luftfuktighet</option>
+                                                <option value="BEVEGELSE">Bevegelse</option>
                                             </select>
                                         ) : (
-                                            <input type="text" value="CO2" readOnly className="p-2 border rounded w-64 bg-gray-100" />
+                                            <input
+                                                type="text"
+                                                value={selectedSensor.sensorType}
+                                                readOnly
+                                                className="p-2 border rounded w-64 bg-gray-100"
+                                            />
                                         )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Adresse:</label>
-                                        {isEditing ? (
-                                            <select className="p-2 border border-black rounded bg-white w-64 cursor-pointer">
-                                                <option value={selectedSensor.building}>{selectedSensor.building}</option>
-                                                {[...new Set(mockData.map(s => s.building))]
-                                                    .filter(b => b !== selectedSensor.building)
-                                                    .map(b => <option key={b} value={b}>{b}</option>)
-                                                }
-                                            </select>
-                                        ) : (
-                                            <input type="text" value={selectedSensor.building} readOnly className="p-2 border rounded w-64 bg-gray-100" />
-                                        )}
+
+                                        {/* SENSOR ADDRESS FIELD
+                                           Currently ALWAYS read-only.
+                                           It does not switch to editable mode yet. */}
+                                        <input
+                                            type="text"
+                                            value={`${selectedSensor.buildingName} (${selectedSensor.address})`}
+                                            readOnly
+                                            className="p-2 border rounded w-64 bg-gray-100"
+                                        />
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Etasje:</label>
-                                        {isEditing ? (
-                                            <select className="p-2 border border-black rounded bg-white w-64 cursor-pointer">
-                                                <option value={selectedSensor.floor}>{selectedSensor.floor}</option>
-                                                {[...new Set(mockData.map(s => s.floor))]
-                                                    .filter(f => f !== selectedSensor.floor)
-                                                    .map(f => <option key={f} value={f}>{f}</option>)
-                                                }
-                                            </select>
-                                        ) : (
-                                            <input type="text" value={selectedSensor.floor} readOnly className="p-2 border rounded w-64 bg-gray-100" />
-                                        )}
+
+                                        {/* SENSOR FLOOR FIELD
+                                           Currently ALWAYS read-only.
+                                           Will be blank if roomFloor is not in the DTO. */}
+                                        <input
+                                            type="text"
+                                            value={selectedSensor.roomFloor ?? ""}
+                                            readOnly
+                                            className="p-2 border rounded w-64 bg-gray-100"
+                                        />
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Romnr:</label>
-                                        {isEditing ? (
-                                            <select className="p-2 border border-black rounded bg-white w-64 cursor-pointer">
-                                                <option value={selectedSensor.room}>{selectedSensor.room}</option>
-                                                {[...new Set(mockData.map(s => s.room))]
-                                                    .filter(r => r !== selectedSensor.room)
-                                                    .map(r => <option key={r} value={r}>{r}</option>)
-                                                }
-                                            </select>
-                                        ) : (
-                                            <input type="text" value={selectedSensor.room} readOnly className="p-2 border rounded w-64 bg-gray-100" />
-                                        )}
+
+                                        {/* SENSOR ROOM FIELD
+                                           Currently ALWAYS read-only. */}
+                                        <input
+                                            type="text"
+                                            value={selectedSensor.roomCode}
+                                            readOnly
+                                            className="p-2 border rounded w-64 bg-gray-100"
+                                        />
                                     </div>
 
-                                    {/*sensor rules*/}
-
+                                    {/* =========================
+                                       SENSOR RULES SECTION
+                                       ========================= */}
                                     <div className="flex items-start gap-2">
                                         <label className="w-40 text-right font-bold text-sm pt-2">Sensor regel:</label>
+
                                         <div className="flex flex-col gap-3">
-                                            {[1, 2].map(i => (
+                                            {selectedSensor.sensorRules.map((rule, index) => (
                                                 <div
-                                                    key={i}
-                                                    className={`flex flex-col gap-1 p-3 border rounded w-72 ${
+                                                    key={rule.id}
+                                                    className={`flex flex-col gap-1 p-3 border rounded w-120 ${
                                                         isEditing ? "bg-white border-black" : "bg-gray-50"
                                                     }`}
                                                 >
-                                                    <p className="text-xs text-gray-400 font-semibold mb-1">Regel {i}</p>
+                                                    <p className="text-xs text-gray-400 font-semibold mb-1">Regel {index + 1}</p>
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose threshold:</label>
+
+                                                        {/* RULE THRESHOLD
+                                                           Editable when isEditing === true
+                                                           Read-only when isEditing === false
+                                                           NOTE: There is no onChange yet, so even in edit mode
+                                                           the value is not actually saved anywhere. */}
                                                         <input
                                                             type="number"
-                                                            value={i === 1 ? 800 : 600}
+                                                            value={rule.ruleThreshold}
                                                             readOnly={!isEditing}
-                                                            className={`p-1 border rounded w-24 text-sm ${
+                                                            className={`p-1 border rounded w-15 text-sm ${
                                                                 isEditing ? "bg-white" : "bg-gray-100"
                                                             }`}
                                                         />
@@ -559,28 +773,53 @@ function Settings({buildingData, mockData }) {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose rule operator:</label>
+
+                                                        {/* RULE OPERATOR
+                                                           EDIT MODE: dropdown
+                                                           READ-ONLY MODE: plain input
+                                                           NOTE: no onChange yet in edit mode */}
                                                         {isEditing ? (
-                                                            <select className="p-1 border border-black rounded bg-white w-24 text-sm cursor-pointer">
-                                                                <option value="GREATER_OR_EQUAL">&gt;=</option>
-                                                                <option value="GREATER_THAN">&gt;</option>
-                                                                <option value="LESS_THAN">&lt;</option>
-                                                                <option value="EQUALS">=</option>
-                                                                <option value="LESS_OR_EQUAL">&lt;=</option>
+                                                            <select
+                                                                value={rule.ruleOperator}
+                                                                className="p-1 border border-black rounded bg-white w-15 text-sm cursor-pointer">
+                                                                {Object.entries(RULE_OPERATOR_LABELS).map(([key, label]) => (
+                                                                    <option key={key} value={key}>
+                                                                        {label}
+                                                                    </option>
+                                                                ))}
                                                             </select>
                                                         ) : (
-                                                            <input type="text" readOnly value=">=" className="p-1 border rounded w-24 text-sm bg-gray-100" />
+                                                            <input
+                                                                type="text"
+                                                                readOnly
+                                                                value={RULE_OPERATOR_LABELS[rule.ruleOperator]}
+                                                                className="p-1 border rounded w-35 text-sm bg-gray-100"
+                                                            />
                                                         )}
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose severity:</label>
+
+                                                        {/* RULE SEVERITY
+                                                           EDIT MODE: dropdown
+                                                           READ-ONLY MODE: plain input
+                                                           NOTE: no onChange yet in edit mode */}
                                                         {isEditing ? (
-                                                            <select className="p-1 border border-black rounded bg-white w-24 text-sm cursor-pointer">
+                                                            <select
+                                                                value={rule.ruleSeverity}
+                                                                className="p-1 border border-black rounded bg-white w-24 text-sm cursor-pointer"
+                                                            >
                                                                 <option value="CRITICAL">CRITICAL</option>
                                                                 <option value="WARNING">WARNING</option>
                                                             </select>
                                                         ) : (
-                                                            <input type="text" readOnly value={i === 1 ? "CRITICAL" : "WARNING"} className="p-1 border rounded w-24 text-sm bg-gray-100" />
+                                                            <input
+                                                                type="text"
+                                                                readOnly
+                                                                value={rule.ruleSeverity}
+                                                                className="p-1 border rounded w-19 text-sm bg-gray-100"
+                                                            />
                                                         )}
                                                     </div>
                                                 </div>
@@ -588,8 +827,9 @@ function Settings({buildingData, mockData }) {
                                         </div>
                                     </div>
 
-                                    {/* Buttons*/}
-
+                                    {/* =========================
+                                      SENSOR ACTION BUTTONS
+                                    ========================= */}
                                     <div className="flex flex-col gap-2 mt-6">
                                         <button
                                             onClick={() => setSensorMode(selectedSensor)}
@@ -598,6 +838,8 @@ function Settings({buildingData, mockData }) {
                                             Slå av/på sensor
                                         </button>
 
+                                        {/* SENSOR EDIT TOGGLE BUTTON
+                                           This controls all places using isEditing */}
                                         <button
                                             onClick={() => setIsEditing(prev => !prev)}
                                             className={`w-64 py-2 px-4 font-semibold rounded cursor-pointer border text-left ${
@@ -609,6 +851,8 @@ function Settings({buildingData, mockData }) {
                                             {isEditing ? "Lagre endringer" : "Endre sensorinformasjon"}
                                         </button>
 
+                                        {/* SENSOR CANCEL BUTTON
+                                           Only visible in edit mode */}
                                         {isEditing && (
                                             <button
                                                 onClick={() => setIsEditing(false)}
@@ -624,74 +868,131 @@ function Settings({buildingData, mockData }) {
                             {/* add sensor form*/}
 
                             {selectedSensor === "ny" && (
-                                <div className="flex flex-col gap-4 mt-6 px-4">
+                                <form onSubmit={handleCreateSensor} className="flex flex-col gap-4 mt-6 px-4">
                                     <p className="text-lg font-bold">Legg til sensor</p>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
-                                        <input type="text" placeholder="SN-C02-001" className="p-2 border rounded bg-white w-64" />
+                                        <input
+                                            type="text"
+                                            name="sensorSerial"
+                                            value={newSensor.sensorSerial}
+                                            onChange={handleSensorChange}
+                                            placeholder="SN-C02-001"
+                                            className="p-2 border rounded bg-white w-64"
+                                            required
+                                        />
                                     </div>
 
-                                    {/* Sensor type dropdown */}
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor type:</label>
-                                        <select className="p-2 border rounded bg-white w-64 cursor-pointer">
+                                        <select
+                                            name="sensorType"
+                                            value={newSensor.sensorType}
+                                            onChange={handleSensorChange}
+                                            className="p-2 border rounded bg-white w-64 cursor-pointer"
+                                            required
+                                        >
                                             <option value="">Velg type</option>
                                             <option value="CO2">CO2</option>
-                                            <option value="Temperatur">Temperatur</option>
-                                            <option value="Luftfuktighet">Luftfuktighet</option>
-                                            <option value="Bevegelse">Bevegelse</option>
+                                            <option value="TEMPERATUR">Temperatur</option>
+                                            <option value="LUFTFUKTIGHET">Luftfuktighet</option>
+                                            <option value="BEVEGELSE">Bevegelse</option>
                                         </select>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-40 text-right font-bold text-sm">Adresse:</label>
-                                        <select className="p-2 border rounded bg-white w-64 cursor-pointer">
-                                            <option value="">Velg adresse</option>
-                                            {[...new Set(mockData.map(s => s.building))].map(b => (
-                                                <option key={b} value={b}>{b}</option>
+                                        <label className="w-40 text-right font-bold text-sm">Bygg:</label>
+                                        <select
+                                            value={selectedSensorBuildingId}
+                                            onChange={async (e) => {
+                                                const buildingId = e.target.value;
+                                                setSelectedSensorBuildingId(buildingId);
+                                                setSelectedSensorFloor("");
+                                                setRoomsForSelectedBuilding([]);
+                                                setNewSensor((prev) => ({ ...prev, roomId: "" }));
+
+                                                if (buildingId) {
+                                                    await fetchRoomsForBuilding(Number(buildingId));
+                                                }
+                                            }}
+                                            className="p-2 border rounded bg-white w-64 cursor-pointer"
+                                            required
+                                        >
+                                            <option value="">Velg bygg</option>
+                                            {buildings.map((b) => (
+                                                <option key={b.id} value={b.id}>
+                                                    {b.name} — {b.streetName} {b.streetNumber}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Etasje:</label>
-                                        <select className="p-2 border rounded bg-white w-64 cursor-pointer">
+                                        <select
+                                            value={selectedSensorFloor}
+                                            onChange={(e) => {
+                                                setSelectedSensorFloor(e.target.value);
+                                                setNewSensor((prev) => ({ ...prev, roomId: "" }));
+                                            }}
+                                            className="p-2 border rounded bg-white w-64 cursor-pointer"
+                                            required
+                                            disabled={!selectedSensorBuildingId}
+                                        >
                                             <option value="">Velg etasje</option>
-                                            {[...new Set(mockData.map(s => s.floor))].map(f => (
-                                                <option key={f} value={f}>{f}</option>
+                                            {availableFloors.map((floor) => (
+                                                <option key={floor} value={floor}>
+                                                    {floor}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Romnr:</label>
-                                        <select className="p-2 border rounded bg-white w-64 cursor-pointer">
+                                        <select
+                                            name="roomId"
+                                            value={newSensor.roomId}
+                                            onChange={handleSensorChange}
+                                            className="p-2 border rounded bg-white w-64 cursor-pointer"
+                                            required
+                                            disabled={!selectedSensorFloor}
+                                        >
                                             <option value="">Velg rom</option>
-                                            {[...new Set(mockData.map(s => s.room))].map(r => (
-                                                <option key={r} value={r}>{r}</option>
+                                            {filteredRooms.map((room) => (
+                                                <option key={room.id} value={room.id}>
+                                                    {room.roomCode}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
 
-                                    {/* Sensor rules*/}
-
                                     <div className="flex items-start gap-2">
                                         <label className="w-40 text-right font-bold text-sm pt-2">Sensor regel:</label>
                                         <div className="flex flex-col gap-4">
-                                            {[1, 2].map(i => (
-                                                <div key={i} className="flex flex-col gap-1 p-3 border rounded bg-gray-50 w-72">
-                                                    <p className="text-xs text-gray-400 font-semibold mb-1">Regel {i}</p>
+                                            {newSensor.sensorRules.map((rule, index) => (
+                                                <div key={index} className="flex flex-col gap-1 p-3 border rounded bg-gray-50 w-72">
+                                                    <p className="text-xs text-gray-400 font-semibold mb-1">Regel {index + 1}</p>
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose threshold:</label>
-                                                        <input type="number" placeholder="800" className="p-1 border rounded bg-white w-24 text-sm" />
+                                                        <input
+                                                            type="number"
+                                                            value={rule.ruleThreshold}
+                                                            onChange={(e) => handleRuleChange(index, "ruleThreshold", e.target.value)}
+                                                            className="p-1 border rounded bg-white w-24 text-sm"
+                                                            required
+                                                        />
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose rule operator:</label>
-                                                        <select className="p-1 border rounded bg-white w-24 text-sm cursor-pointer">
-                                                            <option value="">Velg</option>
+                                                        <select
+                                                            value={rule.ruleOperator}
+                                                            onChange={(e) => handleRuleChange(index, "ruleOperator", e.target.value)}
+                                                            className="p-1 border rounded bg-white w-24 text-sm cursor-pointer"
+                                                        >
                                                             <option value="GREATER_THAN">&gt;</option>
                                                             <option value="LESS_THAN">&lt;</option>
                                                             <option value="EQUALS">=</option>
@@ -702,8 +1003,11 @@ function Settings({buildingData, mockData }) {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose severity:</label>
-                                                        <select className="p-1 border rounded bg-white w-24 text-sm cursor-pointer">
-                                                            <option value="">Velg</option>
+                                                        <select
+                                                            value={rule.ruleSeverity}
+                                                            onChange={(e) => handleRuleChange(index, "ruleSeverity", e.target.value)}
+                                                            className="p-1 border rounded bg-white w-24 text-sm cursor-pointer"
+                                                        >
                                                             <option value="WARNING">WARNING</option>
                                                             <option value="CRITICAL">CRITICAL</option>
                                                         </select>
@@ -715,11 +1019,13 @@ function Settings({buildingData, mockData }) {
 
                                     <div className="flex items-center gap-2">
                                         <div className="w-40" />
-                                        <button className="py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
+                                        <button
+                                            type="submit"
+                                            className="py-2 px-4 bg-gray-400 font-bold rounded cursor-pointer hover:bg-gray-500">
                                             Legg til
                                         </button>
                                     </div>
-                                </div>
+                                </form>
                             )}
                         </div>
                     </div>
@@ -734,17 +1040,17 @@ function Settings({buildingData, mockData }) {
                     <div className="bg-white rounded-lg p-6 w-80 shadow-xl flex flex-col gap-4">
                         <p className="text-lg font-bold">Slå av/på sensor</p>
                         <p className="text-sm text-gray-600">
-                            Sensor: <span className="font-semibold">SN-C02-{sensorMode.sensorId}</span>
+                            Sensor: <span className="font-semibold">{sensorMode.sensorSerial}</span>
                         </p>
                         <p className="text-sm text-gray-600">
-                            Rom: <span className="font-semibold">{sensorMode.room} - {sensorMode.floor}</span>
+                            Rom: <span className="font-semibold">{sensorMode.roomCode} - {sensorMode.roomFloor ?? ""}</span>
                         </p>
                         <p className="text-sm text-gray-600">
                             Nåværende status:{" "}
                             <span className={`font-bold ${
-                                sensorMode.status === "Normalt Co2 Nivå" ? "text-green-600" : "text-red-600"
+                                sensorMode.sensorStatus ? "text-green-600" : "text-red-600"
                             }`}>
-                                {sensorMode.status === "Normalt Co2 Nivå" ? "Aktiv" : "Inaktiv / Feil"}
+                                {sensorMode.sensorStatus ? "Aktiv" : "Inaktiv / Feil"}
                             </span>
                         </p>
 
