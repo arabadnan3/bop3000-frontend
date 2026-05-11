@@ -1,11 +1,79 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from './Navbar';
-import { sensorAlerts} from './mockData';
+import { api } from '../services/api';
 
 function Warnings() {
 
     const [filter, setFilter ] = useState("alle");
     const [expandedId, setExpandedId] = useState(null);
+    const [sensorAlerts, setSensorAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchAlerts();
+    }, []);
+
+    const fetchAlerts = async () => {
+        try {
+            const [sensors, rules, readings, rooms, buildings, leaseRooms, leases, tenants] = await Promise.all([
+                api.getSensors(),
+                api.getSensorRules(),
+                api.getSensorReadings(),
+                api.getRooms(),
+                api.getBuildings(),
+                api.getLeaseRooms(),
+                api.getLeases(),
+                api.getTenants()
+            ]);
+
+            const combined = [];
+
+            sensors.forEach(sensor => {
+                const latestReading = readings
+                    .filter(r => r.sensorId === sensor.id)
+                    .sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp))[0];
+
+                if (!latestReading) return;
+
+                const sensorRules = rules.filter(r => r.sensorId === sensor.id && r.active);
+                const criticalRule = sensorRules.find(r => r.ruleSeverity === 'CRITICAL');
+                const warningRule = sensorRules.find(r => r.ruleSeverity === 'WARNING');
+
+                let triggeredRule = null;
+                if (criticalRule && latestReading.value > criticalRule.ruleThreshold) {
+                    triggeredRule = criticalRule;
+                } else if (warningRule && latestReading.value > warningRule.ruleThreshold) {
+                    triggeredRule = warningRule;
+                }
+
+                if (!triggeredRule) return;
+
+                const room = rooms.find(r => r.id === sensor.roomId);
+                const building = room ? buildings.find(b => b.id === room.buildingId) : null;
+                const leaseRoom = room ? leaseRooms.find(lr => lr.roomId === room.id) : null;
+                const lease = leaseRoom ? leases.find(l => l.id === leaseRoom.leaseId) : null;
+                const tenant = lease ? tenants.find(t => t.id === lease.tenantId) : null;
+
+                combined.push({
+                    id: sensor.id,
+                    sensorId: sensor.id,
+                    sensorSerial: sensor.sensorSerial || 'Ukjent',
+                    building: building?.name || 'Ukjent',
+                    room: room ? `Rom ${room.roomCode}` : 'Ukjent',
+                    floor: room ? `${room.roomFloor}. Etg.` : '',
+                    co2Value: latestReading.value,
+                    severity: triggeredRule.ruleSeverity,
+                    leietaker: tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Ingen leietaker'
+                });
+            });
+
+            setSensorAlerts(combined);
+        } catch (err) {
+            console.error('Feil:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const activeAlerts = sensorAlerts;
     const filtered = activeAlerts.filter(room => {
@@ -17,6 +85,8 @@ function Warnings() {
 
     const criticalCount = activeAlerts.filter(alert => alert.severity === "CRITICAL").length;
     const warningCount = activeAlerts.filter(alert => alert.severity ==="WARNING").length;
+
+    if (loading) return <div className="bg-gray-100 min-h-screen"><Navbar /><p className="text-center mt-20">Laster...</p></div>;
 
     return (
         <div className="bg-gray-100 min-h-screen">
