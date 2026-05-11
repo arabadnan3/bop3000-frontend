@@ -11,7 +11,7 @@ function Settings() {
     const [sensorError, setSensorError] = useState("");
     const [buildings, setBuildings] = useState([]);
     const [sensors, setSensors] = useState([]);
-    const [error, setError] = useState('');
+    //const [error, setError] = useState('');
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [selectedSensor, setSelectedSensor] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -28,14 +28,16 @@ function Settings() {
 
             const data = await api.getBuildings();
 
-            const mappedBuildings = data.map((building) => ({
-                id: building.id,
-                name: building.name,
-                streetName: building.streetName,
-                streetNumber: building.streetNumber,
-                zipCode: building.zipCode,
-                city: building.city
-            }));
+            const mappedBuildings = data
+                .map((building) => ({
+                    id: building.id,
+                    name: building.name,
+                    streetName: building.streetName,
+                    streetNumber: building.streetNumber,
+                    zipCode: building.zipCode,
+                    city: building.city
+                }))
+                .sort((a, b) => a.id - b.id);
 
             setBuildings(mappedBuildings);
         } catch (err) {
@@ -201,6 +203,64 @@ function Settings() {
         }
     };
 
+    const handleUpdateBuilding = async () => {
+        try {
+            await api.updateBuilding(selectedBuilding);
+
+            await fetchBuildings();
+
+            setIsBuildingEditing(false);
+
+            alert("Bygning oppdatert!");
+        } catch (error) {
+            console.error("Feil ved oppdatering av bygning:", error);
+            alert("Kunne ikke oppdatere bygning");
+        }
+    };
+
+    const handleUpdateSensor = async () => {
+        try {
+            await api.updateSensor(selectedSensor);
+
+            await fetchSensors(selectedBuilding?.id || null);
+
+            setIsEditing(false);
+
+            alert("Sensor oppdatert!");
+        } catch (error) {
+            console.error("Feil ved oppdatering av sensor:", error);
+            alert("Kunne ikke oppdatere sensor");
+        }
+    };
+
+    const handleUpdateSensorStatus = async () => {
+        try {
+            await api.updateSensorStatus(selectedSensor);
+
+            await fetchSensors();
+
+            setIsEditing(false);
+            alert("Sensor er nå slått av!");
+        } catch (error) {
+            console.error("Feil ved oppdatering av sensor:", error);
+            alert("Kunne ikke oppdatere sensor.");
+        }
+    }
+
+    const handleSelectedSensorRuleChange = (index, field, value) => {
+        setSelectedSensor(prev => ({
+            ...prev,
+            sensorRules: prev.sensorRules.map((rule, i) =>
+                i === index
+                    ? {
+                        ...rule,
+                        [field]: field === "ruleThreshold" ? Number(value) : value
+                    }
+                    : rule
+            )
+        }));
+    };
+
     const handleCreateSensor = async (e) => {
         e.preventDefault();
 
@@ -273,15 +333,6 @@ function Settings() {
                     >
                         Sensor
                     </button>
-
-                    {activeTab === "sensorer" && (
-                        <button
-                            onClick={() => setSelectedSensor("ny")}
-                            className="ml-auto py-2 px-5 bg-gray-300 font-bold text-base rounded cursor-pointer hover:bg-gray-400"
-                        >
-                            + Legg til sensor
-                        </button>
-                    )}
                 </div>
 
                 {/* ── Bygning tab ── */}
@@ -298,9 +349,9 @@ function Settings() {
                             </button>
 
                             {buildingLoading && <p className="text-sm text-gray-500">Laster bygninger...</p>}
-                            {error && <p className="text-sm text-red-500">{error}</p>}
+                            {buildingError && <p className="text-sm text-red-500">{buildingError}</p>}
 
-                            {!buildingLoading && !error && buildings.length === 0 && (
+                            {!buildingLoading && !buildingError && buildings.length === 0 && (
                                 <p className="text-sm text-gray-500">Ingen bygninger funnet.</p>
                             )}
 
@@ -374,7 +425,7 @@ function Settings() {
                                                    value={newBuilding.streetNumber}
                                                    onChange={handleBuildingChange}
                                                    placeholder="28"
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-20" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -384,7 +435,7 @@ function Settings() {
                                                    value={newBuilding.zipCode}
                                                    onChange={handleBuildingChange}
                                                    placeholder="0965"
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-30" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -394,7 +445,7 @@ function Settings() {
                                                    value={newBuilding.city}
                                                    onChange={handleBuildingChange}
                                                    placeholder="Oslo"
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-40" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -406,7 +457,7 @@ function Settings() {
                                                    placeholder="3"
                                                    min={1}
                                                    max={20}
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-20" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -418,7 +469,7 @@ function Settings() {
                                                    placeholder="3"
                                                    min={1}
                                                    max={20}
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-20" />
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -430,7 +481,7 @@ function Settings() {
                                                    placeholder="40"
                                                    min={1}
                                                    max={200}
-                                                   className="p-2 border rounded bg-white w-64" />
+                                                   className="p-2 border rounded bg-white w-30" />
                                         </div>
 
                                     </div>
@@ -492,40 +543,110 @@ function Settings() {
                             {/* SelectedBuilding details */}
 
                             {/* =========================
-   BUILDING DETAILS SECTION
-   ========================= */}
+                              BUILDING DETAILS SECTION
+                             ========================= */}
 
                             {selectedBuilding && selectedBuilding !== "ny" && selectedBuilding !== "ny-rom" && (
                                 <div key={selectedBuilding.id} className="flex flex-col gap-4">
                                     <p className="text-lg font-bold">{selectedBuilding.name}</p>
 
-                                    {[
-                                        { label: "Adresse", value: `${selectedBuilding.streetName} ${selectedBuilding.streetNumber}` },
-                                        { label: "Postnummer", value: selectedBuilding.zipCode },
-                                        { label: "Poststed", value: selectedBuilding.city },
-                                    ].map(({ label, value }) => (
-                                        <div key={label} className="flex items-center gap-2">
-                                            <label className="w-36 text-right font-bold">{label}:</label>
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-36 text-right font-bold">Bygning navn:</label>
+                                        <input
+                                            type="text"
+                                            value={selectedBuilding.name}
+                                            readOnly={!isBuildingEditing}
+                                            onChange={(e) =>
+                                                setSelectedBuilding(prev => ({
+                                                    ...prev,
+                                                    name: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-64 ${
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                            }`}
+                                        />
+                                    </div>
 
-                                            {/* READ-ONLY BUILDING INPUT
-                                               These fields are display-only right now.
-                                               Even if isBuildingEditing is true, these are still not editable
-                                               because readOnly is always set and there is no onChange handler. */}
-                                            <input
-                                                type="text"
-                                                value={value}
-                                                readOnly
-                                                className="p-2 border rounded w-64 bg-gray-100"
-                                            />
-                                        </div>
-                                    ))}
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-36 text-right font-bold">Adresse:</label>
+
+                                        <input
+                                            type="text"
+                                            value={selectedBuilding.streetName}
+                                            readOnly={!isBuildingEditing}
+                                            onChange={(e) =>
+                                                setSelectedBuilding(prev => ({
+                                                    ...prev,
+                                                    streetName: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-44 ${
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                            }`}
+                                        />
+
+                                        <input
+                                            type="text"
+                                            value={selectedBuilding.streetNumber}
+                                            readOnly={!isBuildingEditing}
+                                            onChange={(e) =>
+                                                setSelectedBuilding(prev => ({
+                                                    ...prev,
+                                                    streetNumber: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-18 ${
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                            }`}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-36 text-right font-bold">Postnummer:</label>
+                                        <input
+                                            type="text"
+                                            value={selectedBuilding.zipCode}
+                                            readOnly={!isBuildingEditing}
+                                            onChange={(e) =>
+                                                setSelectedBuilding(prev => ({
+                                                    ...prev,
+                                                    zipCode: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-20 ${
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                            }`}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-36 text-right font-bold">Poststed:</label>
+                                        <input
+                                            type="text"
+                                            value={selectedBuilding.city}
+                                            readOnly={!isBuildingEditing}
+                                            onChange={(e) =>
+                                                setSelectedBuilding(prev => ({
+                                                    ...prev,
+                                                    city: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-44 ${
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
+                                            }`}
+                                        />
+                                    </div>
 
                                     <div className="flex flex-col gap-2 mt-2">
-                                        {/* BUILDING EDIT TOGGLE BUTTON
-                                         This only changes the button state/text right now.
-                                         It does NOT make the building inputs editable yet. */}
                                         <button
-                                            onClick={() => setIsBuildingEditing(prev => !prev)}
+                                            onClick={() => {
+                                                if (isBuildingEditing) {
+                                                    handleUpdateBuilding();
+                                                } else {
+                                                    setIsBuildingEditing(true);
+                                                }
+                                            }}
                                             className={`w-64 py-2 px-4 font-semibold rounded cursor-pointer border text-left ${
                                                 isBuildingEditing
                                                     ? "bg-black text-white border-black hover:bg-gray-800"
@@ -535,8 +656,6 @@ function Settings() {
                                             {isBuildingEditing ? "Lagre endringer" : "Endre bygninginformasjon"}
                                         </button>
 
-                                        {/* BUILDING CANCEL BUTTON
-                                        Only visible when isBuildingEditing === true */}
                                         {isBuildingEditing && (
                                             <button
                                                 onClick={() => setIsBuildingEditing(false)}
@@ -566,6 +685,13 @@ function Settings() {
 
                         {/* Left side */}
                         <div className="w-72 shrink-0 flex flex-col gap-2">
+
+                            <button
+                                onClick={() => setSelectedSensor("ny")}
+                                className="w-full py-2 bg-gray-300 font-bold rounded cursor-pointer hover:bg-gray-400"
+                            >
+                                + Legg til sensor
+                            </button>
 
                             {/* Building dropdown filter */}
                             <div className="border border-gray-400 rounded bg-gray-100 p-2">
@@ -656,15 +782,17 @@ function Settings() {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
-
-                                        {/* SENSOR SERIAL INPUT
-                                           Editable when isEditing === true
-                                           Read-only when isEditing === false */}
                                         <input
                                             type="text"
                                             value={selectedSensor.sensorSerial}
                                             readOnly={!isEditing}
-                                            className={`p-2 border rounded w-64 ${
+                                            onChange={(e) =>
+                                                setSelectedSensor(prev => ({
+                                                    ...prev,
+                                                    sensorSerial: e.target.value
+                                                }))
+                                            }
+                                            className={`p-2 border rounded w-40 ${
                                                 isEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
@@ -672,14 +800,16 @@ function Settings() {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor type:</label>
-
-                                        {/* SENSOR TYPE FIELD
-                                           EDIT MODE: show dropdown
-                                           READ-ONLY MODE: show plain input */}
                                         {isEditing ? (
                                             <select
                                                 value={selectedSensor.sensorType}
-                                                className="p-2 border border-black rounded bg-white w-64 cursor-pointer"
+                                                onChange={(e) =>
+                                                    setSelectedSensor(prev => ({
+                                                        ...prev,
+                                                        sensorType: e.target.value
+                                                    }))
+                                                }
+                                                className="p-2 border border-black rounded bg-white w-40 cursor-pointer"
                                             >
                                                 <option value="CO2">CO2</option>
                                                 <option value="TEMPERATUR">Temperatur</option>
@@ -698,10 +828,6 @@ function Settings() {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Adresse:</label>
-
-                                        {/* SENSOR ADDRESS FIELD
-                                           Currently ALWAYS read-only.
-                                           It does not switch to editable mode yet. */}
                                         <input
                                             type="text"
                                             value={`${selectedSensor.buildingName} (${selectedSensor.address})`}
@@ -712,10 +838,6 @@ function Settings() {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Etasje:</label>
-
-                                        {/* SENSOR FLOOR FIELD
-                                           Currently ALWAYS read-only.
-                                           Will be blank if roomFloor is not in the DTO. */}
                                         <input
                                             type="text"
                                             value={selectedSensor.roomFloor ?? ""}
@@ -726,9 +848,6 @@ function Settings() {
 
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Romnr:</label>
-
-                                        {/* SENSOR ROOM FIELD
-                                           Currently ALWAYS read-only. */}
                                         <input
                                             type="text"
                                             value={selectedSensor.roomCode}
@@ -737,9 +856,6 @@ function Settings() {
                                         />
                                     </div>
 
-                                    {/* =========================
-                                       SENSOR RULES SECTION
-                                       ========================= */}
                                     <div className="flex items-start gap-2">
                                         <label className="w-40 text-right font-bold text-sm pt-2">Sensor regel:</label>
 
@@ -755,16 +871,13 @@ function Settings() {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose threshold:</label>
-
-                                                        {/* RULE THRESHOLD
-                                                           Editable when isEditing === true
-                                                           Read-only when isEditing === false
-                                                           NOTE: There is no onChange yet, so even in edit mode
-                                                           the value is not actually saved anywhere. */}
                                                         <input
                                                             type="number"
                                                             value={rule.ruleThreshold}
                                                             readOnly={!isEditing}
+                                                            onChange={(e) =>
+                                                                handleSelectedSensorRuleChange(index, "ruleThreshold", e.target.value)
+                                                            }
                                                             className={`p-1 border rounded w-15 text-sm ${
                                                                 isEditing ? "bg-white" : "bg-gray-100"
                                                             }`}
@@ -773,15 +886,14 @@ function Settings() {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose rule operator:</label>
-
-                                                        {/* RULE OPERATOR
-                                                           EDIT MODE: dropdown
-                                                           READ-ONLY MODE: plain input
-                                                           NOTE: no onChange yet in edit mode */}
                                                         {isEditing ? (
                                                             <select
                                                                 value={rule.ruleOperator}
-                                                                className="p-1 border border-black rounded bg-white w-15 text-sm cursor-pointer">
+                                                                onChange={(e) =>
+                                                                    handleSelectedSensorRuleChange(index, "ruleOperator", e.target.value)
+                                                                }
+                                                                className="p-1 border border-black rounded bg-white w-15 text-sm cursor-pointer"
+                                                            >
                                                                 {Object.entries(RULE_OPERATOR_LABELS).map(([key, label]) => (
                                                                     <option key={key} value={key}>
                                                                         {label}
@@ -800,14 +912,12 @@ function Settings() {
 
                                                     <div className="flex items-center justify-between">
                                                         <label className="text-sm font-semibold">Choose severity:</label>
-
-                                                        {/* RULE SEVERITY
-                                                           EDIT MODE: dropdown
-                                                           READ-ONLY MODE: plain input
-                                                           NOTE: no onChange yet in edit mode */}
                                                         {isEditing ? (
                                                             <select
                                                                 value={rule.ruleSeverity}
+                                                                onChange={(e) =>
+                                                                    handleSelectedSensorRuleChange(index, "ruleSeverity", e.target.value)
+                                                                }
                                                                 className="p-1 border border-black rounded bg-white w-24 text-sm cursor-pointer"
                                                             >
                                                                 <option value="CRITICAL">CRITICAL</option>
@@ -827,9 +937,6 @@ function Settings() {
                                         </div>
                                     </div>
 
-                                    {/* =========================
-                                      SENSOR ACTION BUTTONS
-                                    ========================= */}
                                     <div className="flex flex-col gap-2 mt-6">
                                         <button
                                             onClick={() => setSensorMode(selectedSensor)}
@@ -841,7 +948,13 @@ function Settings() {
                                         {/* SENSOR EDIT TOGGLE BUTTON
                                            This controls all places using isEditing */}
                                         <button
-                                            onClick={() => setIsEditing(prev => !prev)}
+                                            onClick={() => {
+                                                if (isEditing) {
+                                                    handleUpdateSensor();
+                                                } else {
+                                                    setIsEditing(true);
+                                                }
+                                            }}
                                             className={`w-64 py-2 px-4 font-semibold rounded cursor-pointer border text-left ${
                                                 isEditing
                                                     ? "bg-black text-white border-black hover:bg-gray-800"
