@@ -150,7 +150,7 @@ export const api = {
     },
 
     updateSensorStatus: async (updatedSensorStatus) => {
-        const response = await fetch(`${API_BASE_URL}/sensors/${updatedSensorStatus.id}`, {
+        const response = await fetch(`${API_BASE_URL}/sensors/active/${updatedSensorStatus.id}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",

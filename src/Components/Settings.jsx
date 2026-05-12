@@ -1148,43 +1148,89 @@ function Settings() {
 
             {/* Sensor button for On/Off */}
 
+            {/* Sensor button for On/Off */}
+
             {sensorMode && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-80 shadow-xl flex flex-col gap-4">
+
                         <p className="text-lg font-bold">Slå av/på sensor</p>
+
                         <p className="text-sm text-gray-600">
-                            Sensor: <span className="font-semibold">{sensorMode.sensorSerial}</span>
+                            Sensor:{" "}
+                            <span className="font-semibold">
+                    {sensorMode.sensorSerial}
+                </span>
                         </p>
+
                         <p className="text-sm text-gray-600">
-                            Rom: <span className="font-semibold">{sensorMode.roomCode} - {sensorMode.roomFloor ?? ""}</span>
+                            Rom:{" "}
+                            <span className="font-semibold">
+                    {sensorMode.roomCode} - {sensorMode.roomFloor ?? ""}
+                </span>
                         </p>
+
                         <p className="text-sm text-gray-600">
                             Nåværende status:{" "}
-                            <span className={`font-bold ${
-                                sensorMode.sensorStatus ? "text-green-600" : "text-red-600"
-                            }`}>
-                                {sensorMode.sensorStatus ? "Aktiv" : "Inaktiv / Feil"}
-                            </span>
+                            <span
+                                className={`font-bold ${
+                                    sensorMode.sensorStatus
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                }`}
+                            >
+                    {sensorMode.sensorStatus ? "Aktiv" : "Inaktiv"}
+                </span>
                         </p>
 
                         <div className="flex gap-2 mt-2">
+
                             <button
                                 onClick={() => setSensorMode(null)}
                                 className="flex-1 py-2 bg-gray-200 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-300"
                             >
                                 Avbryt
                             </button>
+
                             <button
-                                onClick={() => {
-                                    alert(`Sensor SN-C02-${sensorMode.sensorId} har blitt ${
-                                        sensorMode.status === "Normalt Co2 Nivå" ? "deaktivert" : "aktivert"
-                                    }`);
-                                    setSensorMode(null);
+                                onClick={async () => {
+                                    try {
+
+                                        const updatedSensor = {
+                                            ...sensorMode,
+                                            sensorStatus: !sensorMode.sensorStatus
+                                        };
+
+                                        await api.updateSensorStatus(updatedSensor);
+
+                                        await fetchSensors(selectedBuilding?.id || null);
+
+                                        setSelectedSensor(updatedSensor);
+
+                                        alert(
+                                            `Sensor ${updatedSensor.sensorSerial} har blitt ${
+                                                updatedSensor.sensorStatus
+                                                    ? "aktivert"
+                                                    : "deaktivert"
+                                            }`
+                                        );
+
+                                        setSensorMode(null);
+
+                                    } catch (error) {
+                                        console.error("Feil ved oppdatering av sensorstatus:", error);
+                                        alert("Kunne ikke oppdatere sensorstatus");
+                                    }
                                 }}
-                                className="flex-1 py-2 bg-black text-white font-semibold rounded cursor-pointer hover:bg-gray-800"
+                                className={`flex-1 py-2 text-white font-semibold rounded cursor-pointer ${
+                                    sensorMode.sensorStatus
+                                        ? "bg-red-600 hover:bg-red-700"
+                                        : "bg-green-600 hover:bg-green-700"
+                                }`}
                             >
-                                {sensorMode.status === "Normalt Co2 Nivå" ? "Slå av" : "Slå på"}
+                                {sensorMode.sensorStatus ? "Slå av" : "Slå på"}
                             </button>
+
                         </div>
                     </div>
                 </div>
