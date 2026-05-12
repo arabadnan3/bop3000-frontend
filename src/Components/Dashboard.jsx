@@ -67,8 +67,6 @@ function Dashboard() {
     }, [selectedBuilding]);
 
     const handleRoomClick = async (roomId) => {
-        console.log('Clicked roomId:', roomId);
-
         try {
             setCardLoading(true);
             setCardError('');
@@ -95,9 +93,6 @@ function Dashboard() {
                     }
                 })
             );
-
-            console.log('Room details response:', roomDetails);
-
             setSelectedCard({
                 ...roomDetails,
                 sensors: sensorsWithLatestReading

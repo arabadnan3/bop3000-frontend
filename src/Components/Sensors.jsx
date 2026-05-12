@@ -8,106 +8,56 @@ function Sensors() {
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [filter, setFilter] = useState("all");
     const [selectedRoom, setSelectedRoom] = useState(null);
-    const [sensorData, setSensorData] = useState([]);
+    const [buildingCards, setBuildingCards] = useState([]);
+    const [sensorDetails, setSensorDetails] = useState(null);
+    const [roomCards, setRoomCards] = useState([]);
     const [sensorLog, setSensorLog] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchSensorData();
+        fetchBuildingCards();
     }, []);
 
-    const fetchSensorData = async () => {
+    const fetchBuildingCards = async () => {
         try {
             setLoading(true);
 
-            const [rooms, buildings, sensors, sensorReadings, sensorRules, leaseRooms, leases, tenants] = await Promise.all([
-                api.getRooms(),
-                api.getBuildings(),
-                api.getSensors(),
-                api.getSensorReadings(),
-                api.getSensorRules(),
-                api.getLeaseRooms(),
-                api.getLeases(),
-                api.getTenants()
-            ]);
+            const data = await api.getBuildingCards();
+            setBuildingCards(data);
 
-            const combinedData = rooms.map(room => {
-                const building = buildings.find(b => b.id === room.buildingId);
-                // Koble sensor til rom via roomId
-                const sensor = sensors.find(s => s.roomId === room.id);
-                const leaseRoom = leaseRooms.find(lr => lr.roomId === room.id);
-                const lease = leaseRoom ? leases.find(l => l.id === leaseRoom.leaseId) : null;
-                const tenant = lease ? tenants.find(t => t.id === lease.tenantId) : null;
-
-                // Hent siste CO2-verdi for denne sensoren
-                let co2Value = null;
-                let status = "Ingen sensor";
-
-                if (sensor) {
-                    // Finn alle readings for denne sensoren via sensorId
-                    const readings = sensorReadings
-                        .filter(r => r.sensorId === sensor.id)
-                        .sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp));
-
-                    if (readings.length > 0) {
-                        co2Value = readings[0].value;
-                    }
-
-                    // Finn regler for denne sensoren via sensorId
-                    const rules = sensorRules.filter(r => r.sensorId === sensor.id && r.active);
-                    const warningRule = rules.find(r => r.ruleSeverity === 'WARNING');
-                    const criticalRule = rules.find(r => r.ruleSeverity === 'CRITICAL');
-
-                    // Bestem status basert på sensor og regler
-                    if (sensor.sensorStatus === false) {
-                        status = "Feil med sensor";
-                    } else if (co2Value !== null) {
-                        if (criticalRule && co2Value > criticalRule.ruleThreshold) {
-                            status = "Farlig CO2 Nivå!";
-                        } else if (warningRule && co2Value > warningRule.ruleThreshold) {
-                            status = "Moderat CO2 Nivå";
-                        } else {
-                            status = "Normalt CO2 Nivå";
-                        }
-                    } else {
-                        status = "Normalt CO2 Nivå";
-                    }
-                }
-
-                return {
-                    id: room.id,
-                    building: building ? `${building.name} (${building.streetName} ${building.streetNumber})` : 'Ukjent',
-                    room: `Rom ${room.roomCode}`,
-                    floor: `${room.roomFloor}. Etg.`,
-                    status: status,
-                    co2Value: co2Value,
-                    leietaker: tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Ingen leietaker',
-                    areal: room.roomSize,
-                    sensorId: sensor ? sensor.id : null,
-                    sensorSerial: sensor ? sensor.sensorSerial : null,
-                    sensorBattery: sensor ? sensor.sensorBattery : null,
-                    sensorStatus: sensor ? sensor.sensorStatus : null,
-                    sensorType: sensor ? sensor.sensorType : null
-                };
-            });
-
-            setSensorData(combinedData);
             setError(null);
         } catch (err) {
-            console.error('Feil ved henting av data:', err);
-            setError('Kunne ikke hente data fra serveren');
+            console.error("Feil ved henting av bygninger:", err);
+            setError("Kunne ikke hente bygninger fra serveren");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleBuildingSelect = async (building) => {
+        try {
+            setSelectedBuilding(building);
+            setSelectedRoom(null);
+
+            const rooms = await api.getRoomCards(building.id);
+            setRoomCards(rooms);
+        } catch (err) {
+            console.error("Feil ved henting av rom:", err);
+            setRoomCards([]);
         }
     };
 
     // Hent sensorlogg når et rom velges
     const handleRoomSelect = async (room) => {
         setSelectedRoom(room);
+        setSensorDetails(null);
 
         if (room.sensorId) {
             try {
+                const details = await api.getSensorDetails(room.sensorId);
+                setSensorDetails(details);
+
                 const readings = await api.getSensorReadingsBySensor(room.sensorId);
                 const sortedReadings = readings
                     .sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp))
@@ -117,27 +67,18 @@ function Sensors() {
                         timestamp: r.timeStamp,
                         ppm: r.value
                     }));
+
                 setSensorLog(sortedReadings);
             } catch (err) {
-                console.error('Feil ved henting av sensorlogg:', err);
+                console.error("Feil ved henting av sensordetaljer:", err);
+                setSensorDetails(null);
                 setSensorLog([]);
             }
         } else {
+            setSensorDetails(null);
             setSensorLog([]);
         }
     };
-
-    const filteredData = sensorData.filter(room => {
-        if (filter === "all") return true;
-        if (filter === "green") return room.co2Value !== null && room.co2Value <= 800;
-        if (filter === "yellow") return room.co2Value !== null && room.co2Value > 800 && room.co2Value <= 1000;
-        if (filter === "red") return room.co2Value !== null && room.co2Value > 1000;
-        if (filter === "feil") return room.status === "Feil med sensor";
-        if (filter === "ingen") return room.status === "Ingen sensor";
-        return true;
-    });
-
-    const buildingNames = [...new Set(filteredData.map(item => item.building))];
 
     if (loading) {
         return (
@@ -173,56 +114,37 @@ function Sensors() {
                         <option value="ingen">Ingen sensor</option>
                     </select>
 
-                    {buildingNames.map(name => {
-                        const rooms = filteredData.filter(item => item.building === name);
-                        let greenCount = 0;
-                        let yellowCount = 0;
-                        let redCount = 0;
-                        let sensorErrorCount = 0;
-
-                        rooms.forEach(room => {
-                            if (room.status === "Feil med sensor") {
-                                sensorErrorCount++;
-                                return;
-                            }
-                            if (room.status === "Ingen sensor") {
-                                return;
-                            }
-                            if (room.co2Value === null) {
-                                greenCount++;
-                                return;
-                            }
-                            if (room.co2Value <= 800)
-                                greenCount++;
-                            else if (room.co2Value <= 1000)
-                                yellowCount++;
-                            else
-                                redCount++;
-                        });
-
+                    {buildingCards.map(building => {
                         return (
                             <div
-                                key={name}
-                                onClick={() => { setSelectedBuilding(name); setSelectedRoom(null); }}
-                                className={`border rounded p-3 mb-3 cursor-pointer transition ${selectedBuilding === name
-                                    ? 'bg-blue-100 border-blue-400'
-                                    : 'bg-gray-300 hover:bg-gray-200'
+                                key={building.id}
+                                onClick={() => handleBuildingSelect(building)}
+                                className={`border rounded p-3 mb-3 cursor-pointer transition ${
+                                    selectedBuilding?.id === building.id
+                                        ? "bg-blue-100 border-blue-400"
+                                        : "bg-gray-300 hover:bg-gray-200"
                                 }`}
                             >
-                                <p className="text-xl font-semibold mb-2">{name}</p>
-                                <p className="text-xs text-gray-500 mb-2">Rom: {rooms.length}</p>
+                                <p className="text-xl font-semibold mb-2">
+                                    {building.buildingName} ({building.streetName} {building.streetNumber})
+                                </p>
+
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Sensorer: {building.sensorCount}
+                                </p>
+
                                 <div className="flex gap-4 text-sm">
+                                <span className="flex items-center gap-1">
+                                    {building.greenThresholdCount}
+                                    <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+                                 </span>
+                                 <span className="flex items-center gap-1">
+                                     {building.yellowThresholdCount}
+                                     <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>
+                                 </span>
                                     <span className="flex items-center gap-1">
-                                        {greenCount} <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        {yellowCount} <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        {redCount} <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        {sensorErrorCount} <FaExclamationTriangle className="text-yellow-500" />
+                                        {building.redThresholdCount}
+                                        <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
                                     </span>
                                 </div>
                             </div>
@@ -233,79 +155,59 @@ function Sensors() {
                 <div className="flex-1 border border-gray-300 rounded bg-white p-4">
                     {selectedBuilding ? (
                         <div>
-                            <p className="font-bold mb-4 text-xl">{selectedBuilding}</p>
+                            <p className="font-bold mb-4 text-xl">
+                                {selectedBuilding.buildingName}
+                            </p>
+
                             <div className="grid grid-cols-3 gap-4">
-                                {filteredData.filter(room => room.building === selectedBuilding).map(room => (
+                                {roomCards.map(room => (
                                     <div
-                                        key={room.id}
+                                        key={`${room.id}-${room.sensorId}`}
                                         onClick={() => handleRoomSelect(room)}
-                                        className={`border rounded p-3 cursor-pointer transition ${selectedRoom?.id === room.id
-                                            ? 'bg-blue-100 border-blue-400'
-                                            : 'bg-gray-200 hover:bg-gray-100'
+                                        className={`border rounded p-3 cursor-pointer transition ${
+                                            selectedRoom?.sensorId === room.sensorId
+                                                ? "bg-blue-100 border-blue-400"
+                                                : "bg-gray-200 hover:bg-gray-100"
                                         }`}
                                     >
-                                        <p className="text-sm font-semibold">{room.room}</p>
-                                        <p className="text-xs text-gray-600 mb-2">{room.floor}</p>
-                                        <p className="text-xs text-gray-600 mb-1">
-                                            Sensor: {room.sensorSerial ?? "Ingen"}
-                                        </p>
-                                        <p className="text-xs text-gray-600 mb-1">
-                                            Type: {room.sensorType ?? "N/A"}
-                                        </p>
-                                        <p className="text-xs text-gray-600 mb-2">
-                                            Batteri: {room.sensorBattery ? `${room.sensorBattery}%` : "N/A"}
-                                        </p>
-                                        <p className="text-xs text-gray-600 mb-2">Status: {room.status}</p>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium">
-                                                {room.co2Value ? `${Math.round(room.co2Value)} ppm` : "N/A"}
-                                            </span>
-                                            <StatusColor status={room.status} co2Value={room.co2Value} />
-                                        </div>
+                                        <p className="text-sm font-semibold">Rom {room.roomCode}</p>
+                                        <p className="text-xs text-gray-600 mb-2">{room.roomFloor}. Etg.</p>
+                                        <p className="text-xs text-gray-600 mb-1">Sensor serial: {room.sensorSerial ?? "Missing"}</p>
+                                        <p className="text-xs text-gray-600 mb-1">Type: {room.sensorType}</p>
+                                        <p className="text-xs text-gray-600 mb-2">Batteri: {room.sensorBattery}%</p>
+                                        <p className="text-sm font-medium">{Math.round(room.readingValue)} ppm</p>
                                     </div>
                                 ))}
                             </div>
-
-                            {selectedRoom && (
+                            {sensorDetails && (
                                 <div className="mt-6">
                                     <div className="p-4 bg-gray-100 rounded-lg mb-4">
-                                        <p className="text-lg font-bold mb-4">Sensordetaljer for {selectedRoom.room}</p>
+                                        <p className="text-lg font-bold mb-4">
+                                            Sensordetaljer for Rom {sensorDetails.roomCode}
+                                        </p>
+
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p><span className="font-semibold">Bygning:</span> {selectedRoom.building}</p>
-                                                <p><span className="font-semibold">Etasje:</span> {selectedRoom.floor}</p>
-                                                <p><span className="font-semibold">Areal:</span> {selectedRoom.areal} m²</p>
-                                                <p><span className="font-semibold">Leietaker:</span> {selectedRoom.leietaker}</p>
+                                                <p><span className="font-semibold">Bygning:</span> {sensorDetails.buildingName}</p>
+                                                <p><span className="font-semibold">Adresse:</span> {sensorDetails.streetName} {sensorDetails.streetNumber}</p>
+                                                <p><span className="font-semibold">Etasje:</span> {sensorDetails.roomFloor} etg.</p>
+                                                <p><span className="font-semibold">Areal:</span> {sensorDetails.roomSize} m²</p>
+                                                <p>
+                                                    <span className="font-semibold">Leietaker:</span>{" "}
+                                                    {sensorDetails.tenantFirstName || sensorDetails.tenantLastName
+                                                        ? `${sensorDetails.tenantFirstName ?? ""} ${sensorDetails.tenantLastName ?? ""}`
+                                                        : "Ingen"}
+                                                </p>
                                             </div>
+
                                             <div>
-                                                <p><span className="font-semibold">Sensor ID:</span> {selectedRoom.sensorId ?? "Ingen"}</p>
-                                                <p><span className="font-semibold">Serial:</span> {selectedRoom.sensorSerial ?? "N/A"}</p>
-                                                <p><span className="font-semibold">Type:</span> {selectedRoom.sensorType ?? "N/A"}</p>
-                                                <p><span className="font-semibold">Batteri:</span> {selectedRoom.sensorBattery ? `${selectedRoom.sensorBattery}%` : "N/A"}</p>
-                                                <p><span className="font-semibold">Status:</span> {selectedRoom.sensorStatus ? "Aktiv" : "Inaktiv"}</p>
+                                                <p><span className="font-semibold">Sensor serienr:</span> {sensorDetails.sensorSerial ?? "N/A"}</p>
+                                                <p><span className="font-semibold">Type:</span> {sensorDetails.sensorType ?? "N/A"}</p>
+                                                <p><span className="font-semibold">Batteri:</span> {sensorDetails.sensorBattery ?? "N/A"}%</p>
+                                                <p><span className="font-semibold">Status:</span> {sensorDetails.sensorStatus ? "Aktiv" : "Inaktiv"}</p>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {sensorLog.length > 0 && (
-                                        <div>
-                                            <p className="text-lg font-bold mb-2">Sensorlogg for {selectedRoom.room}</p>
-                                            <div className="overflow-y-scroll max-h-72 border border-gray-300 rounded">
-                                                {sensorLog.map((reading, index) => (
-                                                    <div key={reading.id || index} className="flex items-center px-3 py-3 bg-gray-200 border-b">
-                                                        <p className="w-52 font-bold">
-                                                            {new Date(reading.timestamp).toLocaleString('no-NO')}
-                                                        </p>
-                                                        <p className="flex-1 font-bold">{Math.round(reading.ppm)} ppm</p>
-                                                        <span className={`w-4 h-4 rounded-full ${reading.ppm > 1000 ? "bg-red-500" :
-                                                            reading.ppm > 800 ? "bg-yellow-400" : "bg-green-500"
-                                                        }`}>
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
