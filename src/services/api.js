@@ -46,6 +46,11 @@ export const api = {
         return response.json();
     },
 
+    getRoomCards: async () => {
+        const response = await fetch(`${API_BASE_URL}/rooms/rooms_cards`);
+        return response.json();
+    },
+
     getSensorsFromBuilding: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/buildings/${buildingId}`);
         return response.json();
