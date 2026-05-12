@@ -75,4 +75,96 @@ export const api = {
         const response = await fetch(`${API_BASE_URL}/sensor_rules`);
         return response.json();
     },
+
+    createBuilding: async (buildingData) => {
+        const response = await fetch(`${API_BASE_URL}/buildings`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(buildingData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to create building");
+        }
+
+        return await response.json();
+    },
+
+    updateBuilding: async (updatedBuildingData) => {
+        const response = await fetch(`${API_BASE_URL}/buildings/${updatedBuildingData.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedBuildingData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update building");
+        }
+    },
+
+    createSensor: async (sensorData) => {
+        const response = await fetch(`${API_BASE_URL}/sensors`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(sensorData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to create sensor: ${errorText}`);
+        }
+
+        return await response.json();
+    },
+
+    getSensorsAndDetails: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensors/buildings/details`);
+        return response.json();
+    },
+
+    getSensorDetailsByBuilding: async (buildingId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/buildings/details/${buildingId}`);
+        return response.json();
+    },
+
+    updateSensor: async (updatedSensorData) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/${updatedSensorData.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedSensorData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update sensor");
+        }
+
+        return await response.json();
+    },
+
+    updateSensorStatus: async (updatedSensorStatus) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/${updatedSensorStatus.id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedSensorStatus)
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update sensor status");
+        }
+    },
+
+    getAllSensorAlertCards: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensor_alerts/alert_cards`);
+        return response.json();
+    }
 };
