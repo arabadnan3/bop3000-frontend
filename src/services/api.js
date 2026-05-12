@@ -161,5 +161,10 @@ export const api = {
         if (!response.ok) {
             throw new Error("Failed to update sensor status");
         }
+    },
+
+    getAllSensorAlertCards: async () => {
+        const response = await fetch(`${API_BASE_URL}/sensor_alerts/alert_cards`);
+        return response.json();
     }
 };
