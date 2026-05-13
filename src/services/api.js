@@ -36,6 +36,11 @@ export const api = {
         return response.json();
     },
 
+    getSensorReadingsFrom24Hours: async (sensorId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings/aggregated/${sensorId}`);
+        return response.json();
+    },
+
     getLatestReading: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings/latest/${sensorId}`);
         return response.json();

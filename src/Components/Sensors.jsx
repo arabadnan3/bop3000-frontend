@@ -52,31 +52,28 @@ function Sensors() {
     const handleRoomSelect = async (room) => {
         setSelectedRoom(room);
         setSensorDetails(null);
+        setSensorLog([]);
 
         if (room.sensorId) {
             try {
                 const details = await api.getSensorDetails(room.sensorId);
                 setSensorDetails(details);
 
-                const readings = await api.getSensorReadingsBySensor(room.sensorId);
-                const sortedReadings = readings
-                    .sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp))
-                    .slice(0, 24)
-                    .map(r => ({
-                        id: r.id,
-                        timestamp: r.timeStamp,
-                        ppm: r.value
-                    }));
+                const readings = await api.getSensorReadingsFrom24Hours(room.sensorId);
 
-                setSensorLog(sortedReadings);
+                const mappedReadings = readings.map((r, index) => ({
+                    id: index,
+                    timestamp: r.hour,
+                    ppm: r.avgValue,
+                    severity: r.severityLevel
+                }));
+
+                setSensorLog(mappedReadings);
             } catch (err) {
-                console.error("Feil ved henting av sensordetaljer:", err);
+                console.error("Feil ved henting av sensordata:", err);
                 setSensorDetails(null);
                 setSensorLog([]);
             }
-        } else {
-            setSensorDetails(null);
-            setSensorLog([]);
         }
     };
 
@@ -170,7 +167,19 @@ function Sensors() {
                                                 : "bg-gray-200 hover:bg-gray-100"
                                         }`}
                                     >
-                                        <p className="text-sm font-semibold">Rom {room.roomCode}</p>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <p className="text-sm font-semibold">Rom {room.roomCode}</p>
+
+                                            <span
+                                                className={`w-4 h-4 rounded-full ${
+                                                    room.severityLevel === "RED"
+                                                        ? "bg-red-500"
+                                                        : room.severityLevel === "YELLOW"
+                                                            ? "bg-yellow-400"
+                                                            : "bg-green-500"
+                                                }`}
+                                            />
+                                        </div>
                                         <p className="text-xs text-gray-600 mb-2">{room.roomFloor}. Etg.</p>
                                         <p className="text-xs text-gray-600 mb-1">Sensor serial: {room.sensorSerial ?? "Missing"}</p>
                                         <p className="text-xs text-gray-600 mb-1">Type: {room.sensorType}</p>
@@ -208,6 +217,37 @@ function Sensors() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {sensorLog.length > 0 && (
+                                        <div>
+                                            <p className="text-lg font-bold mb-2">
+                                                Sensorlogg for Rom {selectedRoom.roomCode}
+                                            </p>
+
+                                            <div className="overflow-y-scroll max-h-72 border border-gray-300 rounded">
+                                                {sensorLog.map((reading, index) => (
+                                                    <div key={reading.id || index} className="flex items-center px-3 py-3 bg-gray-200 border-b">
+                                                        <p className="w-52 font-bold">
+                                                            {new Date(reading.timestamp).toLocaleString("no-NO")}
+                                                        </p>
+
+                                                        <p className="flex-1 font-bold">
+                                                            {Math.round(reading.ppm)} ppm
+                                                        </p>
+
+                                                        <span className={`w-4 h-4 rounded-full ${
+                                                            reading.severity === "RED"
+                                                                ? "bg-red-500"
+                                                                : reading.severity === "YELLOW"
+                                                                    ? "bg-yellow-400"
+                                                                    : "bg-green-500"
+                                                        }`} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             )}
                         </div>
