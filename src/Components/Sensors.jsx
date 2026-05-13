@@ -38,10 +38,16 @@ function Sensors() {
     const handleBuildingSelect = async (building) => {
         try {
             setSelectedBuilding(building);
+
+            // Reset selected room + sensor data
             setSelectedRoom(null);
+            setSensorDetails(null);
+            setSensorLog([]);
 
             const rooms = await api.getRoomCards(building.id);
+
             setRoomCards(rooms);
+
         } catch (err) {
             console.error("Feil ved henting av rom:", err);
             setRoomCards([]);

@@ -24,12 +24,12 @@ function Navbar() {
                 <Link
                     to="/sensors"
                     className={`${base} ${location.pathname === "/sensors" ? active : normal}`}>
-                    <FaMicrochip /> Sensors
+                    <FaMicrochip /> Sensorer
                 </Link>
                 <Link
                     to="/settings"
                     className={`${base} ${location.pathname === "/settings" ? active : normal}`}>
-                    <FaGear /> Settings
+                    <FaGear /> Kontroll panel
                 </Link>
                 <Link
                     to="/warnings"
@@ -37,7 +37,7 @@ function Navbar() {
                         ? "bg-red-500 text-white"
                         : "bg-gray-100 text-red-600"
                     }`}>
-                    <FaExclamationTriangle /> Warnings
+                    <FaExclamationTriangle /> Varslinger
                 </Link>
             </div>
         </div>

@@ -233,20 +233,6 @@ function Settings() {
         }
     };
 
-    const handleUpdateSensorStatus = async () => {
-        try {
-            await api.updateSensorStatus(selectedSensor);
-
-            await fetchSensors();
-
-            setIsEditing(false);
-            alert("Sensor er nå slått av!");
-        } catch (error) {
-            console.error("Feil ved oppdatering av sensor:", error);
-            alert("Kunne ikke oppdatere sensor.");
-        }
-    }
-
     const handleSelectedSensorRuleChange = (index, field, value) => {
         setSelectedSensor(prev => ({
             ...prev,
