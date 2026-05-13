@@ -1,50 +1,67 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
 export const api = {
+    // DASHBOARD PAGE
+
+    // Retrieves a list of all the buildings
     getBuildings: async () => {
         const response = await fetch(`${API_BASE_URL}/buildings`);
         return response.json();
     },
 
+    // Retrieves a list of rooms from a selected building,
     getRoomsFromBuilding: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/rooms/building/${buildingId}`);
         return response.json();
     },
 
+    // Retrieves the room details from a selected room.
     getRoomDetails: async (roomId) => {
         const response = await fetch(`${API_BASE_URL}/rooms/details/${roomId}`);
         return response.json();
     },
 
+    // Retrieves the sensor details from a selected room.
     getSensorsFromRoom: async (roomId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/rooms/${roomId}`);
         return response.json();
     },
 
+    // Retrieves the latest reading from a sensor
+    getLatestReading: async (sensorId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings/latest/${sensorId}`);
+        return response.json();
+    },
+
+    // SENSORS PAGE
+
+    // Retrieves a list of building cards.
     getBuildingCards: async () => {
         const response = await fetch(`${API_BASE_URL}/buildings/building_cards`);
         return response.json();
     },
 
+    // Retrieves a list of room cards from a selected building.
     getRoomCards: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/rooms/room_cards/${buildingId}`);
         return response.json();
     },
 
+    // Retrieves sensor details from a chosen sensor.
     getSensorDetails: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/details/${sensorId}`);
         return response.json();
     },
 
+    // Retrieve sensor log data from a chosen sensor
     getSensorReadingsFrom24Hours: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings/aggregated/${sensorId}`);
         return response.json();
     },
 
-    getLatestReading: async (sensorId) => {
-        const response = await fetch(`${API_BASE_URL}/sensor_readings/latest/${sensorId}`);
-        return response.json();
-    },
+    // Settings
+
+    // Warnings
 
     getSensorReadingsBySensor: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings/sensors/${sensorId}`);

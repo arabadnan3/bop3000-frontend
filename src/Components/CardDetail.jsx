@@ -10,12 +10,29 @@ import {
 } from 'recharts';
 
 const chartData = [
-    { time: "12.00", co2: 200 },
-    { time: "14.00", co2: 600 },
-    { time: "16.00", co2: 800 },
-    { time: "18.00", co2: 780 },
-    { time: "20.00", co2: 1300 },
-    { time: "22.00", co2: 1100 },
+    { time: "01.00", co2: 100},
+    { time: "02.00", co2: 100},
+    { time: "03.00", co2: 100},
+    { time: "04.00", co2: 100},
+    { time: "05.00", co2: 100},
+    { time: "06.00", co2: 100},
+    { time: "07.00", co2: 100},
+    { time: "08.00", co2: 100},
+    { time: "09.00", co2: 100},
+    { time: "10.00", co2: 100},
+    { time: "11.00", co2: 200 },
+    { time: "12.00", co2: 600 },
+    { time: "13.00", co2: 800 },
+    { time: "14.00", co2: 780 },
+    { time: "15.00", co2: 1300 },
+    { time: "16.00", co2: 1100 },
+    { time: "17.00", co2: 1800 },
+    { time: "18.00", co2: 900 },
+    { time: "19.00", co2: 900 },
+    { time: "20.00", co2: 850 },
+    { time: "21.00", co2: 940 },
+    { time: "22.00", co2: 650 },
+    { time: "23.00", co2: 1120 },
     { time: "24.00", co2: 900 },
 ];
 
@@ -28,8 +45,13 @@ function CardDetail({ data }) {
     const formatSensorStatus = (status) => {
         const normalizedStatus = String(status).trim().toUpperCase();
 
-        if (normalizedStatus === 'TRUE') return 'Aktiv';
-        if (normalizedStatus === 'FALSE') return 'Inaktiv';
+        if (normalizedStatus === 'TRUE') {
+            return <span className="text-green-600 font-medium">Aktiv</span>;
+        }
+
+        if (normalizedStatus === 'FALSE') {
+            return <span className="text-red-600 font-medium">Inaktiv</span>;
+        }
         return 'Ikke tilgjengelig';
     };
 
@@ -61,10 +83,13 @@ function CardDetail({ data }) {
                                 {formatSensorStatus(sensor.sensorStatus)}
                             </p>
                             <p>
+                                <span className="font-bold">Sensor batteri:</span>{' '}
+                                {sensor.sensorBattery}%
+                            </p>
+                            <p>
                                 <span className='font-bold'>Sensor måling:</span>{' '}
                                 {sensor.latestReading?.value ?? 'Ikke tilgjengelig'}
                             </p>
-
                             <div className="mt-4">
                                 <ResponsiveContainer width="100%" height={200}>
                                     <LineChart data={chartData}>

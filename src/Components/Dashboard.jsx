@@ -54,6 +54,7 @@ function Dashboard() {
                 setCardError('');
 
                 const data = await api.getRoomsFromBuilding(selectedBuilding);
+                console.log(data);
                 setRooms(data);
             } catch (err) {
                 setRoomsError('Failed to load rooms');
@@ -106,7 +107,7 @@ function Dashboard() {
     };
 
     const selectedBuildingData = buildings.find(
-        (building) => building.id === selectedBuilding
+        (building) => String(building.id) === selectedBuilding
     );
 
     if (loading) return <p>Loading...</p>;
@@ -160,30 +161,55 @@ function Dashboard() {
                                     <button
                                         key={item.id}
                                         onClick={() => handleRoomClick(item.id)}
-                                        className={`w-full text-left p-4 rounded-lg border transition duration-200 ${
+                                        className={`w-full text-left p-5 rounded-xl border shadow-sm transition duration-200 ${
                                             selectedCard?.roomId === item.id
                                                 ? 'bg-blue-100 border-blue-400'
-                                                : 'bg-gray-50 border-gray-200 hover:bg-blue-50'
+                                                : 'bg-white border-gray-200 hover:bg-blue-50'
                                         }`}
                                     >
-                                        <div className="font-semibold text-gray-800">
-                                            Rom {item.roomCode}
+                                        {/* Header */}
+                                        <div className="mb-4">
+                                            <div className="font-bold text-lg text-gray-800">
+                                                Rom {item.roomCode}
+                                            </div>
+
+                                            <div className="text-sm text-gray-500">
+                                                Etg. {item.roomFloor}
+                                            </div>
                                         </div>
 
-                                        <div className="text-sm text-gray-600">
-                                            Etg. {item.roomFloor}
-                                        </div>
+                                        {/* Sensor List */}
+                                        <div className="space-y-3">
+                                            {item.sensors?.map((sensor) => (
+                                                <div
+                                                    key={sensor.sensorId}
+                                                    className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
+                                                >
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-700">
+                                                            {sensor.sensorType} Sensor
+                                                        </p>
 
-                                        <div className="text-sm mt-1">
-                                            {item.status === 'Farlig Co2 Nivå!' && (
-                                                <span className="text-red-600 font-medium">{item.status}</span>
-                                            )}
-                                            {item.status === 'Normalt Co2 Nivå' && (
-                                                <span className="text-green-600 font-medium">{item.status}</span>
-                                            )}
-                                            {item.status === 'Feil med sensor' && (
-                                                <span className="text-yellow-600 font-medium">{item.status}</span>
-                                            )}
+                                                        <p className="text-xs text-gray-500">
+                                                            {sensor.sensorSerial}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-semibold text-gray-800">
+                                                            {Math.round(sensor.readingValue)} ppm
+                                                         </span>
+                                                        <div
+                                                            className={`w-3 h-3 rounded-full ${
+                                                                sensor.severityLevel === 'RED'
+                                                                    ? 'bg-red-500'
+                                                                    : sensor.severityLevel === 'YELLOW'
+                                                                        ? 'bg-yellow-400'
+                                                                        : 'bg-green-500'
+                                                            }`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </button>
                                 ))}
@@ -191,7 +217,6 @@ function Dashboard() {
                         </div>
                     )}
                 </div>
-
                 <div className="flex-1 p-6">
                     {cardLoading ? (
                         <div className="text-center py-12">
