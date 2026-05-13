@@ -59,15 +59,9 @@ export const api = {
         return response.json();
     },
 
-    // Settings
+    // SETTINGS PAGE
 
-    // Warnings
-
-    getSensorReadingsBySensor: async (sensorId) => {
-        const response = await fetch(`${API_BASE_URL}/sensor_readings/sensors/${sensorId}`);
-        return response.json();
-    },
-
+    // Creates a new building.
     createBuilding: async (buildingData) => {
         const response = await fetch(`${API_BASE_URL}/buildings`, {
             method: "POST",
@@ -84,6 +78,7 @@ export const api = {
         return await response.json();
     },
 
+    // Updates an existing building
     updateBuilding: async (updatedBuildingData) => {
         const response = await fetch(`${API_BASE_URL}/buildings/${updatedBuildingData.id}`, {
             method: "PUT",
@@ -98,6 +93,7 @@ export const api = {
         }
     },
 
+    // Creates a new sensor along with two rules.
     createSensor: async (sensorData) => {
         const response = await fetch(`${API_BASE_URL}/sensors`, {
             method: "POST",
@@ -115,16 +111,19 @@ export const api = {
         return await response.json();
     },
 
+    // Retrieves sensor details
     getSensorsAndDetails: async () => {
         const response = await fetch(`${API_BASE_URL}/sensors/buildings/details`);
         return response.json();
     },
 
+    // Retrieves sensor details by buildings
     getSensorDetailsByBuilding: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/buildings/details/${buildingId}`);
         return response.json();
     },
 
+    // Updates an existing sensor.
     updateSensor: async (updatedSensorData) => {
         const response = await fetch(`${API_BASE_URL}/sensors/${updatedSensorData.id}`, {
             method: "PUT",
@@ -141,6 +140,7 @@ export const api = {
         return await response.json();
     },
 
+    // Updates the status for a sensor.
     updateSensorStatus: async (updatedSensorStatus) => {
         const response = await fetch(`${API_BASE_URL}/sensors/active/${updatedSensorStatus.id}`, {
             method: "PATCH",
@@ -155,6 +155,9 @@ export const api = {
         }
     },
 
+    // WARNINGS PAGE
+
+    // Retrieves a list of all the alerts as cards.
     getAllSensorAlertCards: async () => {
         const response = await fetch(`${API_BASE_URL}/sensor_alerts/alert_cards`);
         return response.json();

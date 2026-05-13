@@ -93,6 +93,31 @@ function Sensors() {
         );
     }
 
+    const filteredRooms = roomCards.filter((room) => {
+
+        if (filter === "all") {
+            return true;
+        }
+
+        if (filter === "green") {
+            return room.severityLevel === "GREEN";
+        }
+
+        if (filter === "yellow") {
+            return room.severityLevel === "YELLOW";
+        }
+
+        if (filter === "red") {
+            return room.severityLevel === "RED";
+        }
+
+        if (filter === "feil") {
+            return room.sensorStatus === false;
+        }
+
+        return true;
+    });
+
     return (
         <div>
             <Navbar />
@@ -104,11 +129,10 @@ function Sensors() {
                         className="mb-4 p-2 border rounded w-full bg-white text-sm cursor-pointer"
                     >
                         <option value="all">Alle sensorer</option>
-                        <option value="green">Normalt (under 800)</option>
-                        <option value="yellow">Moderat (800-1000)</option>
-                        <option value="red">Farlig (over 1000)</option>
+                        <option value="green">Normalt</option>
+                        <option value="yellow">Moderat</option>
+                        <option value="red">Farlig</option>
                         <option value="feil">Feil med sensor</option>
-                        <option value="ingen">Ingen sensor</option>
                     </select>
 
                     {buildingCards.map(building => {
@@ -157,7 +181,7 @@ function Sensors() {
                             </p>
 
                             <div className="grid grid-cols-3 gap-4">
-                                {roomCards.map(room => (
+                                {filteredRooms.map(room => (
                                     <div
                                         key={`${room.id}-${room.sensorId}`}
                                         onClick={() => handleRoomSelect(room)}
