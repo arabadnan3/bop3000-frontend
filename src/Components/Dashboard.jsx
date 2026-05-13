@@ -71,25 +71,29 @@ function Dashboard() {
         try {
             setCardLoading(true);
             setCardError('');
-
             const roomDetails = await api.getRoomDetails(roomId);
             const sensors = await api.getSensorsFromRoom(roomId);
-
             const sensorsWithLatestReading = await Promise.all(
                 sensors.map(async (sensor) => {
                     try {
                         const latestReading = await api.getLatestReading(sensor.id);
 
+                        const sensorLog =
+                            await api.getSensorReadingsFrom24Hours(sensor.id);
                         return {
                             ...sensor,
-                            latestReading
+                            latestReading,
+                            sensorLog
                         };
                     } catch (err) {
-                        console.error(`Failed to load latest reading for sensor ${sensor.id}`, err);
-
+                        console.error(
+                            `Failed to load sensor data for sensor ${sensor.id}`,
+                            err
+                        );
                         return {
                             ...sensor,
-                            latestReading: null
+                            latestReading: null,
+                            sensorLog: []
                         };
                     }
                 })

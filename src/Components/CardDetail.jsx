@@ -9,32 +9,20 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-const chartData = [
-    { time: "01.00", co2: 100},
-    { time: "02.00", co2: 100},
-    { time: "03.00", co2: 100},
-    { time: "04.00", co2: 100},
-    { time: "05.00", co2: 100},
-    { time: "06.00", co2: 100},
-    { time: "07.00", co2: 100},
-    { time: "08.00", co2: 100},
-    { time: "09.00", co2: 100},
-    { time: "10.00", co2: 100},
-    { time: "11.00", co2: 200 },
-    { time: "12.00", co2: 600 },
-    { time: "13.00", co2: 800 },
-    { time: "14.00", co2: 780 },
-    { time: "15.00", co2: 1300 },
-    { time: "16.00", co2: 1100 },
-    { time: "17.00", co2: 1800 },
-    { time: "18.00", co2: 900 },
-    { time: "19.00", co2: 900 },
-    { time: "20.00", co2: 850 },
-    { time: "21.00", co2: 940 },
-    { time: "22.00", co2: 650 },
-    { time: "23.00", co2: 1120 },
-    { time: "24.00", co2: 900 },
-];
+const formatChartData = (sensorLog) => {
+    return sensorLog
+        ?.slice()
+        .reverse()
+        .filter((_, index) => index % 2 === 0)
+        .map((reading) => ({
+            time: new Date(reading.hour).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            co2: reading.avgValue,
+            severity: reading.severityLevel
+        }));
+};
 
 function CardDetail({ data }) {
     const tenantName =
@@ -92,7 +80,7 @@ function CardDetail({ data }) {
                             </p>
                             <div className="mt-4">
                                 <ResponsiveContainer width="100%" height={200}>
-                                    <LineChart data={chartData}>
+                                    <LineChart data={formatChartData(sensor.sensorLog)}>
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="time" />
                                         <YAxis />

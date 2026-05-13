@@ -33,6 +33,12 @@ export const api = {
         return response.json();
     },
 
+    // Retrieve sensor log data from a chosen sensor
+    getSensorReadingsFrom24Hours: async (sensorId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_readings/aggregated/${sensorId}`);
+        return response.json();
+    },
+
     // SENSORS PAGE
 
     // Retrieves a list of building cards.
@@ -50,12 +56,6 @@ export const api = {
     // Retrieves sensor details from a chosen sensor.
     getSensorDetails: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/details/${sensorId}`);
-        return response.json();
-    },
-
-    // Retrieve sensor log data from a chosen sensor
-    getSensorReadingsFrom24Hours: async (sensorId) => {
-        const response = await fetch(`${API_BASE_URL}/sensor_readings/aggregated/${sensorId}`);
         return response.json();
     },
 
