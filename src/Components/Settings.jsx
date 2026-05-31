@@ -72,7 +72,6 @@ function Settings() {
             }));
 
             setSensors(mappedSensors);
-            console.log(mappedSensors);
         } catch (err) {
             setSensorError("Failed to load sensors");
             console.error(err);

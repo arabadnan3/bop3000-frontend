@@ -45,7 +45,6 @@ function Sensors() {
             setSensorLog([]);
 
             const rooms = await api.getRoomCards(building.id);
-
             setRoomCards(rooms);
 
         } catch (err) {

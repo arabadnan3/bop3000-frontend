@@ -54,7 +54,7 @@ function Dashboard() {
                 setCardError('');
 
                 const data = await api.getRoomsFromBuilding(selectedBuilding);
-                console.log(data);
+                console.log("RoomCard DTOs:", data);
                 setRooms(data);
             } catch (err) {
                 setRoomsError('Failed to load rooms');
@@ -72,7 +72,9 @@ function Dashboard() {
             setCardLoading(true);
             setCardError('');
             const roomDetails = await api.getRoomDetails(roomId);
+            console.log("RoomDetail DTOs:", roomDetails);
             const sensors = await api.getSensorsFromRoom(roomId);
+            console.log("Sensor DTOs:", sensors);
             const sensorsWithLatestReading = await Promise.all(
                 sensors.map(async (sensor) => {
                     try {
