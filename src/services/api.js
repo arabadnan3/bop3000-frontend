@@ -48,8 +48,8 @@ export const api = {
     },
 
     // Retrieves a list of room cards from a selected building.
-    getRoomCards: async (buildingId) => {
-        const response = await fetch(`${API_BASE_URL}/rooms/room_cards/${buildingId}`);
+    getSensorCards: async (buildingId) => {
+        const response = await fetch(`${API_BASE_URL}/sensors/sensor_cards/${buildingId}`);
         return response.json();
     },
 
@@ -161,5 +161,14 @@ export const api = {
     getAllSensorAlertCards: async () => {
         const response = await fetch(`${API_BASE_URL}/sensor_alerts/alert_cards`);
         return response.json();
-    }
+    },
+
+    // Resolves an alert that has not been handled.
+    resolveAnAlert: async (alertId) => {
+        const response = await fetch(`${API_BASE_URL}/sensor_alerts/resolve/${alertId}`);
+        return response.json();
+    },
+
+    // MISC.
+
 };

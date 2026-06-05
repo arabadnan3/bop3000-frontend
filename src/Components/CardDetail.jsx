@@ -105,10 +105,6 @@ function CardDetail({ data }) {
                     <p>Ingen sensorer tilgjengelig</p>
                 )}
             </div>
-
-            <p className="font-bold mt-4">
-                <span className="cursor-pointer hover:underline">Slå av sensor</span>
-            </p>
         </div>
     );
 }

@@ -7,7 +7,7 @@ import { api } from '../services/api';
 function Sensors() {
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [filter, setFilter] = useState("all");
-    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedSensor, setselectedSensor] = useState(null);
     const [buildingCards, setBuildingCards] = useState([]);
     const [sensorDetails, setSensorDetails] = useState(null);
     const [roomCards, setRoomCards] = useState([]);
@@ -40,11 +40,11 @@ function Sensors() {
             setSelectedBuilding(building);
 
             // Reset selected room + sensor data
-            setSelectedRoom(null);
+            setselectedSensor(null);
             setSensorDetails(null);
             setSensorLog([]);
 
-            const rooms = await api.getRoomCards(building.id);
+            const rooms = await api.getSensorCards(building.id);
             setRoomCards(rooms);
 
         } catch (err) {
@@ -54,17 +54,17 @@ function Sensors() {
     };
 
     // Hent sensorlogg når et rom velges
-    const handleRoomSelect = async (room) => {
-        setSelectedRoom(room);
+    const handleRoomSelect = async (sensor) => {
+        setselectedSensor(sensor);
         setSensorDetails(null);
         setSensorLog([]);
 
-        if (room.sensorId) {
+        if (sensor.sensorId) {
             try {
-                const details = await api.getSensorDetails(room.sensorId);
+                const details = await api.getSensorDetails(sensor.sensorId);
                 setSensorDetails(details);
 
-                const readings = await api.getSensorReadingsFrom24Hours(room.sensorId);
+                const readings = await api.getSensorReadingsFrom24Hours(sensor.sensorId);
 
                 const mappedReadings = readings.map((r, index) => ({
                     id: index,
@@ -98,26 +98,26 @@ function Sensors() {
         );
     }
 
-    const filteredRooms = roomCards.filter((room) => {
+    const filteredRooms = roomCards.filter((sensor) => {
 
         if (filter === "all") {
             return true;
         }
 
         if (filter === "green") {
-            return room.severityLevel === "GREEN";
+            return sensor.severityLevel === "GREEN";
         }
 
         if (filter === "yellow") {
-            return room.severityLevel === "YELLOW";
+            return sensor.severityLevel === "YELLOW";
         }
 
         if (filter === "red") {
-            return room.severityLevel === "RED";
+            return sensor.severityLevel === "RED";
         }
 
         if (filter === "feil") {
-            return room.sensorStatus === false;
+            return sensor.sensorStatus === false;
         }
 
         return true;
@@ -130,7 +130,7 @@ function Sensors() {
                 <div className="w-72 shrink-0">
                     <select
                         value={filter}
-                        onChange={e => { setFilter(e.target.value); setSelectedBuilding(null); setSelectedRoom(null); }}
+                        onChange={e => { setFilter(e.target.value); setSelectedBuilding(null); setselectedSensor(null); }}
                         className="mb-4 p-2 border rounded w-full bg-white text-sm cursor-pointer"
                     >
                         <option value="all">Alle sensorer</option>
@@ -186,34 +186,34 @@ function Sensors() {
                             </p>
 
                             <div className="grid grid-cols-3 gap-4">
-                                {filteredRooms.map(room => (
+                                {filteredRooms.map(sensor => (
                                     <div
-                                        key={`${room.id}-${room.sensorId}`}
-                                        onClick={() => handleRoomSelect(room)}
+                                        key={`${sensor.id}-${sensor.sensorId}`}
+                                        onClick={() => handleRoomSelect(sensor)}
                                         className={`border rounded p-3 cursor-pointer transition ${
-                                            selectedRoom?.sensorId === room.sensorId
+                                            selectedSensor?.sensorId === sensor.sensorId
                                                 ? "bg-blue-100 border-blue-400"
                                                 : "bg-gray-200 hover:bg-gray-100"
                                         }`}
                                     >
                                         <div className="flex items-center justify-between mb-1">
-                                            <p className="text-sm font-semibold">Rom {room.roomCode}</p>
+                                            <p className="text-sm font-semibold">{sensor.sensorSerial}</p>
 
                                             <span
                                                 className={`w-4 h-4 rounded-full ${
-                                                    room.severityLevel === "RED"
+                                                    sensor.severityLevel === "RED"
                                                         ? "bg-red-500"
-                                                        : room.severityLevel === "YELLOW"
+                                                        : sensor.severityLevel === "YELLOW"
                                                             ? "bg-yellow-400"
                                                             : "bg-green-500"
                                                 }`}
                                             />
                                         </div>
-                                        <p className="text-xs text-gray-600 mb-2">{room.roomFloor}. Etg.</p>
-                                        <p className="text-xs text-gray-600 mb-1">Sensor serial: {room.sensorSerial ?? "Missing"}</p>
-                                        <p className="text-xs text-gray-600 mb-1">Type: {room.sensorType}</p>
-                                        <p className="text-xs text-gray-600 mb-2">Batteri: {room.sensorBattery}%</p>
-                                        <p className="text-sm font-medium">{Math.round(room.readingValue)} ppm</p>
+                                        <p className="text-xs text-gray-600 mb-2">{sensor.roomFloor}. Etg.</p>
+                                        <p className="text-xs text-gray-600 mb-1">Sensor serial: {sensor.sensorSerial ?? "Missing"}</p>
+                                        <p className="text-xs text-gray-600 mb-1">Type: {sensor.sensorType}</p>
+                                        <p className="text-xs text-gray-600 mb-2">Batteri: {sensor.sensorBattery}%</p>
+                                        <p className="text-sm font-medium">{Math.round(sensor.readingValue)} ppm</p>
                                     </div>
                                 ))}
                             </div>
@@ -221,7 +221,7 @@ function Sensors() {
                                 <div className="mt-6">
                                     <div className="p-4 bg-gray-100 rounded-lg mb-4">
                                         <p className="text-lg font-bold mb-4">
-                                            Sensordetaljer for Rom {sensorDetails.roomCode}
+                                            Romdetaljer for Rom {sensorDetails.roomCode}
                                         </p>
 
                                         <div className="grid grid-cols-2 gap-4">
@@ -250,7 +250,7 @@ function Sensors() {
                                     {sensorLog.length > 0 && (
                                         <div>
                                             <p className="text-lg font-bold mb-2">
-                                                Sensorlogg for Rom {selectedRoom.roomCode}
+                                                Sensorlogg for {selectedSensor.sensorSerial}
                                             </p>
 
                                             <div className="overflow-y-scroll max-h-72 border border-gray-300 rounded">
