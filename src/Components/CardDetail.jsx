@@ -33,14 +33,15 @@ function CardDetail({ data }) {
     const formatSensorStatus = (status) => {
         const normalizedStatus = String(status).trim().toUpperCase();
 
-        if (normalizedStatus === 'TRUE') {
-            return <span className="text-green-600 font-medium">Aktiv</span>;
+        if (normalizedStatus === 'ACTIVE') {
+            return <span className="text-green-600 font-medium">På</span>;
         }
 
-        if (normalizedStatus === 'FALSE') {
-            return <span className="text-red-600 font-medium">Inaktiv</span>;
+        if (normalizedStatus === 'DISABLED') {
+            return <span className="text-red-600 font-medium">Av</span>;
         }
-        return 'Ikke tilgjengelig';
+
+        return <span className="text-yellow-600 font-medium">Frakoblet</span>;
     };
 
     return (

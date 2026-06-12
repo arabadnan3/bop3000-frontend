@@ -27,9 +27,10 @@ function Dashboard() {
                 }));
 
                 setBuildings(mappedBuildings);
-            } catch (err) {
-                setError('Failed to load buildings');
-                console.error(err);
+            } catch (error) {
+                console.log("Message:", error.message);
+                console.log("Status:", error.status);
+                console.log("Data:", error.data);
             } finally {
                 setLoading(false);
             }
@@ -56,9 +57,10 @@ function Dashboard() {
                 const data = await api.getRoomsFromBuilding(selectedBuilding);
                 console.log("RoomCard DTOs:", data);
                 setRooms(data);
-            } catch (err) {
-                setRoomsError('Failed to load rooms');
-                console.error(err);
+            } catch (error) {
+                console.log("Message:", error.message);
+                console.log("Status:", error.status);
+                console.log("Data:", error.data);
             } finally {
                 setRoomsLoading(false);
             }
@@ -104,9 +106,10 @@ function Dashboard() {
                 ...roomDetails,
                 sensors: sensorsWithLatestReading
             });
-        } catch (err) {
-            setCardError('Failed to load room details');
-            console.error(err);
+        } catch (error) {
+            console.log("Message:", error.message);
+            console.log("Status:", error.status);
+            console.log("Data:", error.data);
         } finally {
             setCardLoading(false);
         }

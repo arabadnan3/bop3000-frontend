@@ -1,67 +1,84 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// Helper function
+async function handleResponse(response) {
+
+    let data = null;
+
+    // Handle endpoints that return JSON
+    const contentType = response.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+    }
+
+    if (!response.ok) {
+        const error = new Error(
+            data?.message || `Request failed with status ${response.status}`
+        );
+
+        error.status = response.status;
+        error.data = data;
+
+        throw error;
+    }
+
+    return data;
+}
+
 export const api = {
+
     // DASHBOARD PAGE
 
-    // Retrieves a list of all the buildings
     getBuildings: async () => {
         const response = await fetch(`${API_BASE_URL}/buildings`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves a list of rooms from a selected building,
     getRoomsFromBuilding: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/rooms/building/${buildingId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves the room details from a selected room.
     getRoomDetails: async (roomId) => {
         const response = await fetch(`${API_BASE_URL}/rooms/details/${roomId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves the sensor details from a selected room.
     getSensorsFromRoom: async (roomId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/rooms/${roomId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves the latest reading from a sensor
     getLatestReading: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings/latest/${sensorId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieve sensor log data from a chosen sensor
     getSensorReadingsFrom24Hours: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_readings/aggregated/${sensorId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
     // SENSORS PAGE
 
-    // Retrieves a list of building cards.
     getBuildingCards: async () => {
         const response = await fetch(`${API_BASE_URL}/buildings/building_cards`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves a list of room cards from a selected building.
     getSensorCards: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/sensor_cards/${buildingId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves sensor details from a chosen sensor.
     getSensorDetails: async (sensorId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/details/${sensorId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
     // SETTINGS PAGE
 
-    // Creates a new building.
     createBuilding: async (buildingData) => {
         const response = await fetch(`${API_BASE_URL}/buildings`, {
             method: "POST",
@@ -71,14 +88,9 @@ export const api = {
             body: JSON.stringify(buildingData),
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to create building");
-        }
-
-        return await response.json();
+        return handleResponse(response);
     },
 
-    // Updates an existing building
     updateBuilding: async (updatedBuildingData) => {
         const response = await fetch(`${API_BASE_URL}/buildings/${updatedBuildingData.id}`, {
             method: "PUT",
@@ -88,12 +100,9 @@ export const api = {
             body: JSON.stringify(updatedBuildingData),
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to update building");
-        }
+        return handleResponse(response);
     },
 
-    // Creates a new sensor along with two rules.
     createSensor: async (sensorData) => {
         const response = await fetch(`${API_BASE_URL}/sensors`, {
             method: "POST",
@@ -103,27 +112,19 @@ export const api = {
             body: JSON.stringify(sensorData)
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to create sensor: ${errorText}`);
-        }
-
-        return await response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves sensor details
     getSensorsAndDetails: async () => {
         const response = await fetch(`${API_BASE_URL}/sensors/buildings/details`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Retrieves sensor details by buildings
     getSensorDetailsByBuilding: async (buildingId) => {
         const response = await fetch(`${API_BASE_URL}/sensors/buildings/details/${buildingId}`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Updates an existing sensor.
     updateSensor: async (updatedSensorData) => {
         const response = await fetch(`${API_BASE_URL}/sensors/${updatedSensorData.id}`, {
             method: "PUT",
@@ -133,14 +134,9 @@ export const api = {
             body: JSON.stringify(updatedSensorData),
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to update sensor");
-        }
-
-        return await response.json();
+        return handleResponse(response);
     },
 
-    // Updates the status for a sensor.
     updateSensorStatus: async (updatedSensorStatus) => {
         const response = await fetch(`${API_BASE_URL}/sensors/active/${updatedSensorStatus.id}`, {
             method: "PATCH",
@@ -150,25 +146,18 @@ export const api = {
             body: JSON.stringify(updatedSensorStatus)
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to update sensor status");
-        }
+        return handleResponse(response);
     },
 
     // WARNINGS PAGE
 
-    // Retrieves a list of all the alerts as cards.
     getAllSensorAlertCards: async () => {
         const response = await fetch(`${API_BASE_URL}/sensor_alerts/alert_cards`);
-        return response.json();
+        return handleResponse(response);
     },
 
-    // Resolves an alert that has not been handled.
     resolveAnAlert: async (alertId) => {
         const response = await fetch(`${API_BASE_URL}/sensor_alerts/resolve/${alertId}`);
-        return response.json();
+        return handleResponse(response);
     },
-
-    // MISC.
-
 };

@@ -20,6 +20,17 @@ function Settings() {
     const [selectedSensorBuildingId, setSelectedSensorBuildingId] = useState("");
     const [selectedSensorFloor, setSelectedSensorFloor] = useState("");
     const [roomsForSelectedBuilding, setRoomsForSelectedBuilding] = useState([]);
+    const [buildingFormError, setBuildingFormError] = useState("");
+    const [buildingValidationErrors, setBuildingValidationErrors] = useState({});
+    const [sensorFormError, setSensorFormError] = useState("");
+    const [sensorValidationErrors, setSensorValidationErrors] = useState({});
+
+    const clearBuildingValidationError = (field) => {
+        setBuildingValidationErrors(prev => ({
+            ...prev,
+            [field]: undefined
+        }));
+    };
 
     const fetchBuildings = async () => {
         try {
@@ -40,15 +51,18 @@ function Settings() {
                 .sort((a, b) => a.id - b.id);
 
             setBuildings(mappedBuildings);
-        } catch (err) {
-            setBuildingError("Failed to load buildings");
-            console.error(err);
+        } catch (error) {
+
+            setBuildingError(error.message);
+
         } finally {
             setBuildingLoading(false);
         }
     };
 
     const fetchSensors = async (buildingId = null) => {
+        setSensorFormError("");
+        setSensorValidationErrors({});
         try {
             setSensorLoading(true);
             setSensorError("");
@@ -57,25 +71,27 @@ function Settings() {
                 ? await api.getSensorDetailsByBuilding(buildingId)
                 : await api.getSensorsAndDetails();
 
-            const mappedSensors = data.map((sensor) => ({
-                id: sensor.id,
-                roomId: sensor.roomId,
-                roomCode: sensor.roomCode,
-                roomFloor: sensor.roomFloor,
-                buildingName: sensor.buildingName,
-                address: `${sensor.streetName} ${sensor.streetNumber}`,
-                sensorSerial: sensor.sensorSerial,
-                sensorType: sensor.sensorType,
-                sensorBattery: sensor.sensorBattery,
-                sensorStatus: sensor.sensorStatus,
-                sensorRules: sensor.sensorRules
-            }));
+            const mappedSensors = data
+                .map((sensor) => ({
+                    id: sensor.id,
+                    roomId: sensor.roomId,
+                    roomCode: sensor.roomCode,
+                    roomFloor: sensor.roomFloor,
+                    buildingName: sensor.buildingName,
+                    address: `${sensor.streetName} ${sensor.streetNumber}`,
+                    sensorSerial: sensor.sensorSerial,
+                    sensorType: sensor.sensorType,
+                    sensorBattery: sensor.sensorBattery,
+                    sensorStatus: sensor.sensorStatus,
+                    sensorRules: sensor.sensorRules
+                }))
+                .sort((a, b) => a.id - b.id);
 
             setSensors(mappedSensors);
-        } catch (err) {
-            setSensorError("Failed to load sensors");
-            console.error(err);
-            setSensors([]);
+        } catch (error) {
+
+            setSensorError(error.message);
+
         } finally {
             setSensorLoading(false);
         }
@@ -135,22 +151,33 @@ function Settings() {
     });
 
     const RULE_OPERATOR_LABELS = {
-        GREATER_THAN: ">",
-        LESS_THAN: "<",
-        EQUALS: "=",
-        GREATER_OR_EQUAL: ">=",
-        LESS_OR_EQUAL: "<="
+        GREATER_THAN: "GREATER_THAN",
+        LESS_THAN: "LESS_THAN",
+        EQUALS: "EQUALS",
+        GREATER_OR_EQUAL: "GREATER_OR_EQUAL",
+        LESS_OR_EQUAL: "LESS_OR_EQUAL"
+    };
+
+    const clearSensorValidationError = (field) => {
+        setSensorValidationErrors(prev => ({
+            ...prev,
+            [field]: undefined
+        }));
     };
 
     const handleSensorChange = (e) => {
         const { name, value } = e.target;
+
         setNewSensor((prev) => ({
             ...prev,
             [name]: name === "roomId" ? Number(value) : value
         }));
+
+        clearSensorValidationError(name);
     };
 
     const handleRuleChange = (index, field, value) => {
+        setSensorFormError("");
         setNewSensor((prev) => ({
             ...prev,
             sensorRules: prev.sensorRules.map((rule, i) =>
@@ -171,10 +198,15 @@ function Settings() {
             ...prev,
             [name]: type === "number" ? Number(value) : value
         }));
+
+        clearBuildingValidationError(name);
     };
 
     const handleCreateBuilding = async (e) => {
         e.preventDefault();
+
+        setBuildingFormError("");
+        setBuildingValidationErrors({});
 
         try {
             const createdBuilding = await api.createBuilding(newBuilding);
@@ -196,43 +228,38 @@ function Settings() {
             });
 
             setSelectedBuilding(null);
+            clearBuildingErrors();
         } catch (error) {
-            console.error("Feil ved opprettelse av bygning:", error);
-            alert("Kunne ikke opprette bygning");
+            if (error.status === 400 && error.data) {
+                setBuildingValidationErrors(error.data);
+                return;
+            }
+            setBuildingFormError(error.message);
         }
     };
 
     const handleUpdateBuilding = async () => {
+
+        setBuildingFormError("");
+        setBuildingValidationErrors({});
+
         try {
             await api.updateBuilding(selectedBuilding);
-
             await fetchBuildings();
-
             setIsBuildingEditing(false);
-
+            clearBuildingErrors();
             alert("Bygning oppdatert!");
         } catch (error) {
-            console.error("Feil ved oppdatering av bygning:", error);
-            alert("Kunne ikke oppdatere bygning");
-        }
-    };
-
-    const handleUpdateSensor = async () => {
-        try {
-            await api.updateSensor(selectedSensor);
-
-            await fetchSensors(selectedBuilding?.id || null);
-
-            setIsEditing(false);
-
-            alert("Sensor oppdatert!");
-        } catch (error) {
-            console.error("Feil ved oppdatering av sensor:", error);
-            alert("Kunne ikke oppdatere sensor");
+            if (error.status === 400 && error.data) {
+                setBuildingValidationErrors(error.data);
+                return;
+            }
+            setBuildingFormError(error.message);
         }
     };
 
     const handleSelectedSensorRuleChange = (index, field, value) => {
+        setSensorFormError("");
         setSelectedSensor(prev => ({
             ...prev,
             sensorRules: prev.sensorRules.map((rule, i) =>
@@ -248,6 +275,8 @@ function Settings() {
 
     const handleCreateSensor = async (e) => {
         e.preventDefault();
+        setSensorFormError("");
+        setSensorValidationErrors({});
 
         try {
             await api.createSensor(newSensor);
@@ -278,11 +307,72 @@ function Settings() {
             setSelectedSensorFloor("");
             setRoomsForSelectedBuilding([]);
             setSelectedSensor(null);
+            clearSensorErrors();
 
             await fetchSensors(selectedBuilding?.id || null);
         } catch (error) {
-            console.error("Feil ved opprettelse av sensor:", error);
-            alert("Kunne ikke opprette sensor");
+            if (
+                error.status === 400 &&
+                error.data &&
+                !error.data.message
+            ) {
+                setSensorValidationErrors(error.data);
+                return;
+            }
+            setSensorFormError(error.message);
+        }
+    };
+
+    const handleUpdateSensor = async () => {
+
+        setSensorFormError("");
+        setSensorValidationErrors({});
+
+        try {
+            await api.updateSensor(selectedSensor);
+
+            await fetchSensors(selectedBuilding?.id || null);
+
+            setIsEditing(false);
+            clearSensorErrors();
+
+            alert("Sensor oppdatert!");
+        } catch (error) {
+            if (error.status === 400 && error.data) {
+                setSensorValidationErrors(error.data);
+                return;
+            }
+
+            setSensorFormError(error.message);
+        }
+    };
+
+    const handleToggleSensorStatus = async () => {
+
+        if (sensorMode.sensorStatus === "OFFLINE") {
+            setSensorFormError(
+                "Frakoblede sensorer kan ikke aktiveres manuelt."
+            );
+            return;
+        }
+
+        try {
+            const updatedSensor = {
+                ...sensorMode,
+                sensorStatus:
+                    sensorMode.sensorStatus === "ACTIVE"
+                        ? "DISABLED"
+                        : "ACTIVE"
+            };
+
+            await api.updateSensorStatus(updatedSensor);
+            await fetchSensors(selectedBuilding?.id || null);
+            setSensorMode(updatedSensor);
+            if (selectedSensor?.id === updatedSensor.id) {
+                setSelectedSensor(updatedSensor);
+            }
+        } catch (error) {
+            setSensorFormError(error.message);
         }
     };
 
@@ -291,6 +381,16 @@ function Settings() {
     const filteredRooms = roomsForSelectedBuilding.filter(
         (room) => String(room.floor) === String(selectedSensorFloor)
     );
+
+    const clearBuildingErrors = () => {
+        setBuildingFormError("");
+        setBuildingValidationErrors({});
+    };
+
+    const clearSensorErrors = () => {
+        setSensorFormError("");
+        setSensorValidationErrors({});
+    };
 
     return (
         <div className="bg-gray-100 min-h-screen">
@@ -303,7 +403,14 @@ function Settings() {
                 <div className="flex items-center gap-6 border-b border-gray-300 pb-2">
                     <p className="text-lg font-bold underline whitespace-nowrap">Kontroll panel</p>
 
-                    <button onClick={() => {setActiveTab("bygning"); setSelectedBuilding(null); setSelectedSensor(null); }}
+                    <button onClick={() => {
+                        clearBuildingErrors();
+                        clearSensorErrors();
+
+                        setActiveTab("bygning");
+                        setSelectedBuilding(null);
+                        setSelectedSensor(null);
+                    }}
                             className={`pb-1 font-semibold cursor-pointer ${
                                 activeTab === "bygning" ? "border-b-2 border-black text-black" : "text-gray-500"
                             }`}
@@ -311,7 +418,14 @@ function Settings() {
                         Bygning
                     </button>
 
-                    <button onClick={() => {setActiveTab("sensorer"); setSelectedBuilding(null); setSelectedSensor(null); }}
+                    <button onClick={() => {
+                        clearBuildingErrors();
+
+                        setActiveTab("sensorer");
+                        setSelectedBuilding(null);
+                        setSelectedSensor(null);
+                        clearSensorErrors();
+                    }}
                             className={`pb-1 font-semibold cursor-pointer ${
                                 activeTab === "sensorer" ? "border-b-2 border-black text-black" : "text-gray-500"
                             }`}
@@ -326,10 +440,11 @@ function Settings() {
 
                         {/*Left side*/}
                         <div className="w-72 shrink-0 flex flex-col gap-2">
-                            <button
-                                onClick={() => setSelectedBuilding("ny")}
-                                className="w-full py-2 bg-gray-300 font-bold rounded cursor-pointer hover:bg-gray-400"
-                            >
+                            <button onClick={() => {
+                                clearBuildingErrors();
+                                setSelectedBuilding("ny");
+                            }}
+                                    className="w-full py-2 bg-gray-300 font-bold rounded cursor-pointer hover:bg-gray-400">
                                 + Legg til bygning
                             </button>
 
@@ -345,6 +460,8 @@ function Settings() {
                                     <div
                                         key={building.id}
                                         onClick={() => {
+                                            clearBuildingErrors();
+
                                             setSelectedBuilding(building);
                                             setIsBuildingEditing(false);
                                         }}
@@ -378,6 +495,11 @@ function Settings() {
                             {selectedBuilding === "ny" && (
                                 <form onSubmit={handleCreateBuilding}>
                                     <div className="flex flex-col gap-4">
+                                        {buildingFormError && (
+                                            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                                {buildingFormError}
+                                            </div>
+                                        )}
                                         <p className="text-lg font-bold"> Legg til bygning </p>
 
                                         <div className="flex items-center gap-2">
@@ -390,6 +512,11 @@ function Settings() {
                                                 placeholder="Hovedbygg A"
                                                 className="p-2 border rounded bg-white w-64"
                                             />
+                                            {buildingValidationErrors.name && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.name}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -401,6 +528,11 @@ function Settings() {
                                                 onChange={handleBuildingChange}
                                                 placeholder="Byggveien"
                                                 className="p-2 border rounded bg-white w-64" />
+                                            {buildingValidationErrors.streetName && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.streetName}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -411,6 +543,11 @@ function Settings() {
                                                    onChange={handleBuildingChange}
                                                    placeholder="28"
                                                    className="p-2 border rounded bg-white w-20" />
+                                            {buildingValidationErrors.streetNumber && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.streetNumber}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -421,6 +558,11 @@ function Settings() {
                                                    onChange={handleBuildingChange}
                                                    placeholder="0965"
                                                    className="p-2 border rounded bg-white w-30" />
+                                            {buildingValidationErrors.zipCode && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.zipCode}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -431,6 +573,11 @@ function Settings() {
                                                    onChange={handleBuildingChange}
                                                    placeholder="Oslo"
                                                    className="p-2 border rounded bg-white w-40" />
+                                            {buildingValidationErrors.city && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.city}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -440,9 +587,12 @@ function Settings() {
                                                    value={newBuilding.floorCount}
                                                    onChange={handleBuildingChange}
                                                    placeholder="3"
-                                                   min={1}
-                                                   max={20}
                                                    className="p-2 border rounded bg-white w-20" />
+                                            {buildingValidationErrors.floorCount && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.floorCount}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -452,9 +602,12 @@ function Settings() {
                                                    value={newBuilding.roomCount}
                                                    onChange={handleBuildingChange}
                                                    placeholder="3"
-                                                   min={1}
-                                                   max={20}
                                                    className="p-2 border rounded bg-white w-20" />
+                                            {buildingValidationErrors.roomCount && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.roomCount}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -464,9 +617,12 @@ function Settings() {
                                                    value={newBuilding.roomSize}
                                                    onChange={handleBuildingChange}
                                                    placeholder="40"
-                                                   min={1}
-                                                   max={200}
                                                    className="p-2 border rounded bg-white w-30" />
+                                            {buildingValidationErrors.roomSize && (
+                                                <p className="text-red-500 text-sm">
+                                                    {buildingValidationErrors.roomSize}
+                                                </p>
+                                            )}
                                         </div>
 
                                     </div>
@@ -533,6 +689,11 @@ function Settings() {
 
                             {selectedBuilding && selectedBuilding !== "ny" && selectedBuilding !== "ny-rom" && (
                                 <div key={selectedBuilding.id} className="flex flex-col gap-4">
+                                    {buildingFormError && (
+                                        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                            {buildingFormError}
+                                        </div>
+                                    )}
                                     <p className="text-lg font-bold">{selectedBuilding.name}</p>
 
                                     <div className="flex items-center gap-2">
@@ -541,50 +702,70 @@ function Settings() {
                                             type="text"
                                             value={selectedBuilding.name}
                                             readOnly={!isBuildingEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedBuilding(prev => ({
                                                     ...prev,
                                                     name: e.target.value
-                                                }))
-                                            }
+                                                }));
+
+                                                clearBuildingValidationError("name");
+                                            }}
                                             className={`p-2 border rounded w-64 ${
-                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
-                                            }`}
+                                                isBuildingEditing ? "bg-white border-black" : "bg-gray-100"}`}
                                         />
+                                        {buildingValidationErrors.name && (
+                                            <p className="text-red-500 text-sm">
+                                                {buildingValidationErrors.name}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <label className="w-36 text-right font-bold">Adresse:</label>
-
+                                        <label className="w-36 text-right font-bold">Adresse navn:</label>
                                         <input
                                             type="text"
                                             value={selectedBuilding.streetName}
                                             readOnly={!isBuildingEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedBuilding(prev => ({
                                                     ...prev,
                                                     streetName: e.target.value
-                                                }))
-                                            }
+                                                }));
+
+                                                clearBuildingValidationError("streetName");
+                                            }}
                                             className={`p-2 border rounded w-44 ${
                                                 isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
-
+                                        {buildingValidationErrors.streetName && (
+                                            <p className="text-red-500 text-sm">
+                                                {buildingValidationErrors.streetName}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className={"flex items-center gap-2"}>
+                                        <label className="w-36 text-right font-bold">Adresse nummer:</label>
                                         <input
                                             type="text"
                                             value={selectedBuilding.streetNumber}
                                             readOnly={!isBuildingEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedBuilding(prev => ({
                                                     ...prev,
                                                     streetNumber: e.target.value
-                                                }))
-                                            }
-                                            className={`p-2 border rounded w-18 ${
+                                                }));
+                                                clearBuildingValidationError("streetNumber");
+                                            }}
+                                            className={`p-2 border rounded w-24 ${
                                                 isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
+                                        {buildingValidationErrors.streetNumber && (
+                                            <p className="text-red-500 text-sm">
+                                                {buildingValidationErrors.streetNumber}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -593,16 +774,23 @@ function Settings() {
                                             type="text"
                                             value={selectedBuilding.zipCode}
                                             readOnly={!isBuildingEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedBuilding(prev => ({
                                                     ...prev,
                                                     zipCode: e.target.value
-                                                }))
-                                            }
+                                                }));
+
+                                                clearBuildingValidationError("zipCode");
+                                            }}
                                             className={`p-2 border rounded w-20 ${
                                                 isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
+                                        {buildingValidationErrors.zipCode && (
+                                            <p className="text-red-500 text-sm">
+                                                {buildingValidationErrors.zipCode}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -611,16 +799,23 @@ function Settings() {
                                             type="text"
                                             value={selectedBuilding.city}
                                             readOnly={!isBuildingEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedBuilding(prev => ({
                                                     ...prev,
                                                     city: e.target.value
-                                                }))
-                                            }
+                                                }));
+
+                                                clearBuildingValidationError("city");
+                                            }}
                                             className={`p-2 border rounded w-44 ${
                                                 isBuildingEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
+                                        {buildingValidationErrors.city && (
+                                            <p className="text-red-500 text-sm">
+                                                {buildingValidationErrors.city}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex flex-col gap-2 mt-2">
@@ -628,6 +823,7 @@ function Settings() {
                                             onClick={() => {
                                                 if (isBuildingEditing) {
                                                     handleUpdateBuilding();
+
                                                 } else {
                                                     setIsBuildingEditing(true);
                                                 }
@@ -643,7 +839,10 @@ function Settings() {
 
                                         {isBuildingEditing && (
                                             <button
-                                                onClick={() => setIsBuildingEditing(false)}
+                                                onClick={() => {
+                                                    clearBuildingErrors();
+                                                    setIsBuildingEditing(false);
+                                                }}
                                                 className="w-64 py-2 px-4 bg-gray-100 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-200 text-left"
                                             >
                                                 Avbryt
@@ -651,7 +850,9 @@ function Settings() {
                                         )}
 
                                         <button
-                                            onClick={() => setSelectedBuilding("ny-rom")}
+                                            onClick={() =>
+                                                setSelectedBuilding("ny-rom")
+                                        }
                                             className="w-64 py-2 px-4 bg-gray-200 border border-gray-400 font-semibold rounded cursor-pointer hover:bg-gray-300 text-left"
                                         >
                                             Legg til rom
@@ -672,7 +873,11 @@ function Settings() {
                         <div className="w-72 shrink-0 flex flex-col gap-2">
 
                             <button
-                                onClick={() => setSelectedSensor("ny")}
+                                onClick={() => {
+                                    setSelectedSensor("ny");
+                                    clearSensorErrors();
+                                }
+                            }
                                 className="w-full py-2 bg-gray-300 font-bold rounded cursor-pointer hover:bg-gray-400"
                             >
                                 + Legg til sensor
@@ -725,6 +930,7 @@ function Settings() {
                                         onClick={() => {
                                             setSelectedSensor(sensor);
                                             setIsEditing(false);
+                                            clearSensorErrors();
                                         }}
                                         className={`border rounded p-3 cursor-pointer flex justify-between items-center ${
                                             selectedSensor?.id === sensor.id
@@ -739,7 +945,11 @@ function Settings() {
                                             </p>
                                         </div>
                                         <div className={`w-4 h-4 rounded-full ${
-                                            sensor.sensorStatus ? "bg-green-500" : "bg-red-500"
+                                            sensor.sensorStatus === "ACTIVE"
+                                                ? "bg-green-500"
+                                                : sensor.sensorStatus === "OFFLINE"
+                                                    ? "bg-yellow-500"
+                                                    : "bg-red-500"
                                         }`} />
                                     </div>
                                 ))}
@@ -763,24 +973,36 @@ function Settings() {
                                ========================= */}
 
                             {selectedSensor && selectedSensor !== "ny" && (
-                                <div key={selectedSensor.id} className="flex flex-col gap-4 mt-6 px-4">
 
+                                <div key={selectedSensor.id} className="flex flex-col gap-4 mt-6 px-4">
+                                    {sensorFormError && (
+                                        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                            {sensorFormError}
+                                        </div>
+                                    )}
                                     <div className="flex items-center gap-2">
                                         <label className="w-40 text-right font-bold text-sm">Sensor serienr:</label>
                                         <input
                                             type="text"
                                             value={selectedSensor.sensorSerial}
                                             readOnly={!isEditing}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setSelectedSensor(prev => ({
                                                     ...prev,
                                                     sensorSerial: e.target.value
-                                                }))
-                                            }
+                                                }));
+
+                                                clearSensorValidationError("sensorSerial");
+                                            }}
                                             className={`p-2 border rounded w-40 ${
                                                 isEditing ? "bg-white border-black" : "bg-gray-100"
                                             }`}
                                         />
+                                        {sensorValidationErrors.sensorSerial && (
+                                            <p className="text-red-500 text-sm">
+                                                {sensorValidationErrors.sensorSerial}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -788,18 +1010,19 @@ function Settings() {
                                         {isEditing ? (
                                             <select
                                                 value={selectedSensor.sensorType}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     setSelectedSensor(prev => ({
                                                         ...prev,
                                                         sensorType: e.target.value
-                                                    }))
-                                                }
-                                                className="p-2 border border-black rounded bg-white w-40 cursor-pointer"
-                                            >
+                                                    }));
+
+                                                    clearSensorValidationError("sensorType");
+                                                }}
+                                                className="p-2 border border-black rounded bg-white w-40 cursor-pointer">
                                                 <option value="CO2">CO2</option>
-                                                <option value="TEMPERATUR">Temperatur</option>
-                                                <option value="LUFTFUKTIGHET">Luftfuktighet</option>
-                                                <option value="BEVEGELSE">Bevegelse</option>
+                                                <option value="TEMPERATURE">Temperatur</option>
+                                                <option value="HUMIDITY">Luftfuktighet</option>
+                                                <option value="PRESSURE">Lufttrykk</option>
                                             </select>
                                         ) : (
                                             <input
@@ -808,6 +1031,11 @@ function Settings() {
                                                 readOnly
                                                 className="p-2 border rounded w-64 bg-gray-100"
                                             />
+                                        )}
+                                        {sensorValidationErrors.sensorType && (
+                                            <p className="text-red-500 text-sm">
+                                                {sensorValidationErrors.sensorType}
+                                            </p>
                                         )}
                                     </div>
 
@@ -855,7 +1083,7 @@ function Settings() {
                                                     <p className="text-xs text-gray-400 font-semibold mb-1">Regel {index + 1}</p>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose threshold:</label>
+                                                        <label className="text-sm font-semibold">Terskelsgrense:</label>
                                                         <input
                                                             type="number"
                                                             value={rule.ruleThreshold}
@@ -870,14 +1098,14 @@ function Settings() {
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose rule operator:</label>
+                                                        <label className="text-sm font-semibold">Sammenligningsoperator:</label>
                                                         {isEditing ? (
                                                             <select
                                                                 value={rule.ruleOperator}
                                                                 onChange={(e) =>
                                                                     handleSelectedSensorRuleChange(index, "ruleOperator", e.target.value)
                                                                 }
-                                                                className="p-1 border border-black rounded bg-white w-15 text-sm cursor-pointer"
+                                                                className="p-1 border border-black rounded bg-white w-36 text-sm cursor-pointer"
                                                             >
                                                                 {Object.entries(RULE_OPERATOR_LABELS).map(([key, label]) => (
                                                                     <option key={key} value={key}>
@@ -896,7 +1124,7 @@ function Settings() {
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose severity:</label>
+                                                        <label className="text-sm font-semibold">Alvorlighetsgrad:</label>
                                                         {isEditing ? (
                                                             <select
                                                                 value={rule.ruleSeverity}
@@ -953,7 +1181,10 @@ function Settings() {
                                            Only visible in edit mode */}
                                         {isEditing && (
                                             <button
-                                                onClick={() => setIsEditing(false)}
+                                                onClick={() => {
+                                                    clearSensorErrors();
+                                                    setIsEditing(false);
+                                                }}
                                                 className="w-64 py-2 px-4 bg-gray-100 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-200 text-left"
                                             >
                                                 Avbryt
@@ -967,6 +1198,11 @@ function Settings() {
 
                             {selectedSensor === "ny" && (
                                 <form onSubmit={handleCreateSensor} className="flex flex-col gap-4 mt-6 px-4">
+                                    {sensorFormError && (
+                                        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                            {sensorFormError}
+                                        </div>
+                                    )}
                                     <p className="text-lg font-bold">Legg til sensor</p>
 
                                     <div className="flex items-center gap-2">
@@ -980,6 +1216,11 @@ function Settings() {
                                             className="p-2 border rounded bg-white w-64"
                                             required
                                         />
+                                        {sensorValidationErrors.sensorSerial && (
+                                            <p className="text-red-500 text-sm">
+                                                {sensorValidationErrors.sensorSerial}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -993,10 +1234,15 @@ function Settings() {
                                         >
                                             <option value="">Velg type</option>
                                             <option value="CO2">CO2</option>
-                                            <option value="TEMPERATUR">Temperatur</option>
-                                            <option value="LUFTFUKTIGHET">Luftfuktighet</option>
-                                            <option value="BEVEGELSE">Bevegelse</option>
+                                            <option value="TEMPERATURE">Temperatur</option>
+                                            <option value="HUMIDITY">Luftfuktighet</option>
+                                            <option value="PRESSURE">Lufttrykk</option>
                                         </select>
+                                        {sensorValidationErrors.sensorType && (
+                                            <p className="text-red-500 text-sm">
+                                                {sensorValidationErrors.sensorType}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -1064,17 +1310,22 @@ function Settings() {
                                                 </option>
                                             ))}
                                         </select>
+                                        {sensorValidationErrors.roomId && (
+                                            <p className="text-red-500 text-sm">
+                                                {sensorValidationErrors.roomId}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-start gap-2">
-                                        <label className="w-40 text-right font-bold text-sm pt-2">Sensor regel:</label>
+                                        <label className="w-40 text-right font-bold text-sm pt-2">Sensor regler:</label>
                                         <div className="flex flex-col gap-4">
                                             {newSensor.sensorRules.map((rule, index) => (
-                                                <div key={index} className="flex flex-col gap-1 p-3 border rounded bg-gray-50 w-72">
+                                                <div key={index} className="flex flex-col gap-1 p-3 border rounded bg-gray-50 w-96">
                                                     <p className="text-xs text-gray-400 font-semibold mb-1">Regel {index + 1}</p>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose threshold:</label>
+                                                        <label className="text-sm font-semibold">Terskelsgrense:</label>
                                                         <input
                                                             type="number"
                                                             value={rule.ruleThreshold}
@@ -1085,22 +1336,22 @@ function Settings() {
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose rule operator:</label>
+                                                        <label className="text-sm font-semibold">Sammenligningsoperator:</label>
                                                         <select
                                                             value={rule.ruleOperator}
                                                             onChange={(e) => handleRuleChange(index, "ruleOperator", e.target.value)}
-                                                            className="p-1 border rounded bg-white w-24 text-sm cursor-pointer"
+                                                            className="p-1 border rounded bg-white w-36 text-sm cursor-pointer"
                                                         >
-                                                            <option value="GREATER_THAN">&gt;</option>
-                                                            <option value="LESS_THAN">&lt;</option>
-                                                            <option value="EQUALS">=</option>
-                                                            <option value="GREATER_OR_EQUAL">&gt;=</option>
-                                                            <option value="LESS_OR_EQUAL">&lt;=</option>
+                                                            <option value="GREATER_THAN">GREATER_THAN</option>
+                                                            <option value="LESS_THAN">LESS_THAN</option>
+                                                            <option value="EQUALS">EQUALS</option>
+                                                            <option value="GREATER_OR_EQUAL">GREATER_OR_EQUAL</option>
+                                                            <option value="LESS_OR_EQUAL">LESS_OR_EQUAL</option>
                                                         </select>
                                                     </div>
 
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-semibold">Choose severity:</label>
+                                                        <label className="text-sm font-semibold">Alvorlighetsgrad:</label>
                                                         <select
                                                             value={rule.ruleSeverity}
                                                             onChange={(e) => handleRuleChange(index, "ruleSeverity", e.target.value)}
@@ -1133,8 +1384,6 @@ function Settings() {
 
             {/* Sensor button for On/Off */}
 
-            {/* Sensor button for On/Off */}
-
             {sensorMode && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-80 shadow-xl flex flex-col gap-4">
@@ -1147,73 +1396,47 @@ function Settings() {
                     {sensorMode.sensorSerial}
                 </span>
                         </p>
-
                         <p className="text-sm text-gray-600">
                             Rom:{" "}
-                            <span className="font-semibold">
-                    {sensorMode.roomCode} - {sensorMode.roomFloor ?? ""}
-                </span>
+                            <span className="font-semibold">{sensorMode.roomCode} - Etg. {sensorMode.roomFloor ?? ""}</span>
                         </p>
-
                         <p className="text-sm text-gray-600">
                             Nåværende status:{" "}
-                            <span
-                                className={`font-bold ${
-                                    sensorMode.sensorStatus
-                                        ? "text-green-600"
+                            <span className={`font-bold ${
+                                sensorMode.sensorStatus === "ACTIVE"
+                                    ? "text-green-600"
+                                    : sensorMode.sensorStatus === "OFFLINE"
+                                        ? "text-yellow-600"
                                         : "text-red-600"
-                                }`}
-                            >
-                    {sensorMode.sensorStatus ? "Aktiv" : "Inaktiv"}
+                            }`}>
+                    {sensorMode.sensorStatus === "ACTIVE"
+                        ? "Aktiv"
+                        : sensorMode.sensorStatus === "OFFLINE"
+                            ? "Frakoblet"
+                            : "Deaktivert"}
                 </span>
                         </p>
-
                         <div className="flex gap-2 mt-2">
-
                             <button
                                 onClick={() => setSensorMode(null)}
-                                className="flex-1 py-2 bg-gray-200 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-300"
-                            >
+                                className="flex-1 py-2 bg-gray-200 border border-gray-300 font-semibold rounded cursor-pointer hover:bg-gray-300">
                                 Avbryt
                             </button>
-
                             <button
-                                onClick={async () => {
-                                    try {
-
-                                        const updatedSensor = {
-                                            ...sensorMode,
-                                            sensorStatus: !sensorMode.sensorStatus
-                                        };
-
-                                        await api.updateSensorStatus(updatedSensor);
-
-                                        await fetchSensors(selectedBuilding?.id || null);
-
-                                        setSelectedSensor(updatedSensor);
-
-                                        alert(
-                                            `Sensor ${updatedSensor.sensorSerial} har blitt ${
-                                                updatedSensor.sensorStatus
-                                                    ? "aktivert"
-                                                    : "deaktivert"
-                                            }`
-                                        );
-
-                                        setSensorMode(null);
-
-                                    } catch (error) {
-                                        console.error("Feil ved oppdatering av sensorstatus:", error);
-                                        alert("Kunne ikke oppdatere sensorstatus");
-                                    }
-                                }}
-                                className={`flex-1 py-2 text-white font-semibold rounded cursor-pointer ${
-                                    sensorMode.sensorStatus
-                                        ? "bg-red-600 hover:bg-red-700"
-                                        : "bg-green-600 hover:bg-green-700"
-                                }`}
-                            >
-                                {sensorMode.sensorStatus ? "Slå av" : "Slå på"}
+                                onClick={handleToggleSensorStatus}
+                                disabled={sensorMode.sensorStatus === "OFFLINE"}
+                                className={`px-4 py-2 rounded text-white ${
+                                    sensorMode.sensorStatus === "OFFLINE"
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : sensorMode.sensorStatus === "ACTIVE"
+                                            ? "bg-red-600 hover:bg-red-700"
+                                            : "bg-green-600 hover:bg-green-700"
+                                }`}>
+                                {sensorMode.sensorStatus === "OFFLINE"
+                                    ? "Kan ikke endres"
+                                    : sensorMode.sensorStatus === "ACTIVE"
+                                        ? "Slå av sensor"
+                                        : "Slå på sensor"}
                             </button>
 
                         </div>

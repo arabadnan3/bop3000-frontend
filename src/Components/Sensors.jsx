@@ -27,9 +27,12 @@ function Sensors() {
             setBuildingCards(data);
 
             setError(null);
-        } catch (err) {
-            console.error("Feil ved henting av bygninger:", err);
-            setError("Kunne ikke hente bygninger fra serveren");
+        } catch (error) {
+            setError(error.message);
+
+            console.log("Message:", error.message);
+            console.log("Status:", error.status);
+            console.log("Data:", error.data);
         } finally {
             setLoading(false);
         }
@@ -47,9 +50,10 @@ function Sensors() {
             const rooms = await api.getSensorCards(building.id);
             setRoomCards(rooms);
 
-        } catch (err) {
-            console.error("Feil ved henting av rom:", err);
-            setRoomCards([]);
+        } catch (error) {
+            console.log("Message:", error.message);
+            console.log("Status:", error.status);
+            console.log("Data:", error.data);
         }
     };
 
@@ -74,10 +78,10 @@ function Sensors() {
                 }));
 
                 setSensorLog(mappedReadings);
-            } catch (err) {
-                console.error("Feil ved henting av sensordata:", err);
-                setSensorDetails(null);
-                setSensorLog([]);
+            } catch (error) {
+                console.log("Message:", error.message);
+                console.log("Status:", error.status);
+                console.log("Data:", error.data);
             }
         }
     };
@@ -117,7 +121,7 @@ function Sensors() {
         }
 
         if (filter === "feil") {
-            return sensor.sensorStatus === false;
+            return sensor.sensorStatus === "OFFLINE";
         }
 
         return true;
@@ -126,6 +130,7 @@ function Sensors() {
     return (
         <div>
             <Navbar />
+
             <div className="flex gap-4 px-6 mt-4">
                 <div className="w-72 shrink-0">
                     <select
