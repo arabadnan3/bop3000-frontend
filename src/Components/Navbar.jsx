@@ -12,7 +12,7 @@ function Navbar() {
     return (
         <div>
             <h1 className="text-4xl p-8 bg-white text-black font-bold mb-6 shadow-lg rounded-b-lg border-b">
-                USN Studentbygg - CO2 Observasjon
+                USN Studentbygg - Sensormåling Observasjon
             </h1>
 
             <div className="flex flex-wrap gap-4 px-8 py-4 bg-white shadow-md rounded-lg mx-8 mb-6">

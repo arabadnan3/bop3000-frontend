@@ -35,6 +35,21 @@ function Warnings() {
     const criticalCount = activeAlerts.filter(alert => alert.ruleSeverity === "CRITICAL").length;
     const warningCount = activeAlerts.filter(alert => alert.ruleSeverity === "WARNING").length;
 
+    const getSensorUnit = (sensorType) => {
+        switch (sensorType) {
+            case "CO2":
+                return "ppm";
+            case "HUMIDITY":
+                return "%";
+            case "PRESSURE":
+                return "Pa";
+            case "TEMPERATURE":
+                return "°C";
+            default:
+                return "";
+        }
+    };
+
     if (loading) {
         return (
             <div className="bg-gray-100 min-h-screen">
@@ -137,7 +152,7 @@ function Warnings() {
                                                             : "text-gray-600"
                                                 }`}
                                             >
-                                                {alert.triggerValue} ppm
+                                                {alert.triggerValue} {getSensorUnit(alert.sensorType)}
                                             </p>
 
                                             <button
@@ -157,7 +172,7 @@ function Warnings() {
                                             </p>
 
                                             <p className="text-sm">
-                                                <span className="font-bold">CO2 verdi: </span>
+                                                <span className="font-bold">{alert.sensorType} verdi: </span>
                                                 <span
                                                     className={`font-bold ${
                                                         isCritical
@@ -167,7 +182,7 @@ function Warnings() {
                                                                 : "text-gray-600"
                                                     }`}
                                                 >
-                                                    {alert.triggerValue} ppm
+                                                    {alert.triggerValue} {getSensorUnit(alert.sensorType)}
                                                 </span>
                                             </p>
 

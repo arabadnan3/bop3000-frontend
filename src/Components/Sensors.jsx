@@ -73,7 +73,7 @@ function Sensors() {
                 const mappedReadings = readings.map((r, index) => ({
                     id: index,
                     timestamp: r.hour,
-                    ppm: r.avgValue,
+                    value: r.avgValue,
                     severity: r.severityLevel
                 }));
 
@@ -126,6 +126,21 @@ function Sensors() {
 
         return true;
     });
+
+    const getSensorUnit = (sensorType) => {
+        switch (sensorType) {
+            case "CO2":
+                return "ppm";
+            case "HUMIDITY":
+                return "%";
+            case "PRESSURE":
+                return "Pa";
+            case "TEMPERATURE":
+                return "°C";
+            default:
+                return "";
+        }
+    };
 
     return (
         <div>
@@ -218,7 +233,11 @@ function Sensors() {
                                         <p className="text-xs text-gray-600 mb-1">Sensor serial: {sensor.sensorSerial ?? "Missing"}</p>
                                         <p className="text-xs text-gray-600 mb-1">Type: {sensor.sensorType}</p>
                                         <p className="text-xs text-gray-600 mb-2">Batteri: {sensor.sensorBattery}%</p>
-                                        <p className="text-sm font-medium">{Math.round(sensor.readingValue)} ppm</p>
+                                        <p className="text-sm font-medium">
+                                            {sensor.readingValue != null
+                                                ? `${Math.round(sensor.readingValue)} ${getSensorUnit(sensor.sensorType)}`
+                                                : "N/A"}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
@@ -266,7 +285,9 @@ function Sensors() {
                                                         </p>
 
                                                         <p className="flex-1 font-bold">
-                                                            {Math.round(reading.ppm)} ppm
+                                                            {reading.value != null
+                                                                ? `${Math.round(reading.value)} ${getSensorUnit(sensorDetails.sensorType)}`
+                                                                : "N/A"}
                                                         </p>
 
                                                         <span className={`w-4 h-4 rounded-full ${
